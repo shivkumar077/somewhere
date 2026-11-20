@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
@@ -19,54 +19,61 @@ interface SceneCanvasProps {
 }
 
 /**
- * Camera Animator handles the cinematic fly-in transition
- * towards the town when ENTER is clicked, and zooms back out when returning to orbit.
+ * Camera Animator handles responsive framing across ALL aspect ratios:
+ * - Desktop/widescreen (aspect > 1.2): standard cinematic orbit distance
+ * - Tablets (aspect 0.75 - 1.2): dynamic distance compensation
+ * - Narrow phones & foldables (aspect < 0.75): adaptive distance to frame planet
+ * - Mobile landscape (height < 500): low Y offset
  */
 const CameraController: React.FC<{
   isEntering: boolean;
   isEntered: boolean;
 }> = ({ isEntering, isEntered }) => {
-  const { camera } = useThree();
-  const initialCamPos = useRef(new THREE.Vector3(0, 1.8, 12.2));
-  const enteredCamPos = useRef(new THREE.Vector3(0.5, 2.6, 6.4));
+  const { camera, size } = useThree();
+  const aspect = size.width / Math.max(1, size.height);
+
+  const targets = useMemo(() => {
+    if (isEntering || isEntered) {
+      // Entered town close-up view
+      const z = aspect < 1.0 ? 6.4 * (1.1 / Math.max(0.48, aspect)) : 6.4;
+      const y = aspect < 1.0 ? 1.9 : 2.6;
+      return {
+        pos: new THREE.Vector3(0.4, y, z),
+        lookAt: new THREE.Vector3(0, 0.4, 0),
+      };
+    } else {
+      // Planet orbit view
+      // Keep entire planet (diameter 8.8) framed nicely inside view
+      const zMultiplier = aspect < 1.15 ? 1.15 / Math.max(0.45, aspect) : 1.0;
+      const z = 12.2 * zMultiplier;
+      const y = aspect < 1.0 ? 0.7 : 1.8;
+      const lookAtY = aspect < 1.0 ? 0.2 : 0;
+      return {
+        pos: new THREE.Vector3(0, y, z),
+        lookAt: new THREE.Vector3(0, lookAtY, 0),
+      };
+    }
+  }, [isEntering, isEntered, aspect]);
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    if (isEntering || isEntered) {
-      if (prefersReducedMotion) {
-        camera.position.copy(enteredCamPos.current);
-        camera.lookAt(0, 0.8, 0);
-      } else {
-        gsap.to(camera.position, {
-          x: enteredCamPos.current.x,
-          y: enteredCamPos.current.y,
-          z: enteredCamPos.current.z,
-          duration: 2.2,
-          ease: 'power3.inOut',
-          onUpdate: () => {
-            camera.lookAt(0, 0.5, 0);
-          },
-        });
-      }
+    if (prefersReducedMotion) {
+      camera.position.copy(targets.pos);
+      camera.lookAt(targets.lookAt);
     } else {
-      if (prefersReducedMotion) {
-        camera.position.copy(initialCamPos.current);
-        camera.lookAt(0, 0, 0);
-      } else {
-        gsap.to(camera.position, {
-          x: initialCamPos.current.x,
-          y: initialCamPos.current.y,
-          z: initialCamPos.current.z,
-          duration: 1.8,
-          ease: 'power2.out',
-          onUpdate: () => {
-            camera.lookAt(0, 0, 0);
-          },
-        });
-      }
+      gsap.to(camera.position, {
+        x: targets.pos.x,
+        y: targets.pos.y,
+        z: targets.pos.z,
+        duration: isEntering || isEntered ? 2.0 : 1.5,
+        ease: isEntering || isEntered ? 'power3.inOut' : 'power2.out',
+        onUpdate: () => {
+          camera.lookAt(targets.lookAt);
+        },
+      });
     }
-  }, [isEntering, isEntered, camera]);
+  }, [targets, camera, isEntering, isEntered]);
 
   return null;
 };
@@ -91,7 +98,7 @@ export const SceneCanvas: React.FC<SceneCanvasProps> = ({
     >
       <Canvas
         shadows
-        camera={{ position: [0, 1.8, 12.2], fov: 42, near: 0.1, far: 80 }}
+        camera={{ position: [0, 1.8, 12.2], fov: 42, near: 0.1, far: 120 }}
         dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 2)]}
         gl={{
           antialias: true,
@@ -110,8 +117,8 @@ export const SceneCanvas: React.FC<SceneCanvasProps> = ({
         <OrbitControls
           enablePan={false}
           enableZoom={!isEntering && !isEntered}
-          minDistance={8}
-          maxDistance={18}
+          minDistance={6}
+          maxDistance={35}
           minPolarAngle={Math.PI / 4}
           maxPolarAngle={(3 * Math.PI) / 4}
           rotateSpeed={0.6}
@@ -122,7 +129,7 @@ export const SceneCanvas: React.FC<SceneCanvasProps> = ({
         {/* Dynamic Sky, Lights, Clouds, Birds, Stars */}
         <SkyAndAtmosphere atmosphere={atmosphere} />
 
-        {/* Dimensional 3D Typography */}
+        {/* Responsive Dimensional 3D Typography */}
         {!isEntered && (
           <TextSomewhere3D atmosphereMode={atmosphere.mode} />
         )}
@@ -140,4 +147,3 @@ export const SceneCanvas: React.FC<SceneCanvasProps> = ({
     </div>
   );
 };
-

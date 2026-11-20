@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import * as THREE from 'three';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { Float, Text } from '@react-three/drei';
 
 interface TextSomewhere3DProps {
@@ -9,11 +9,20 @@ interface TextSomewhere3DProps {
 
 /**
  * 3D Dimensional Storybook Typography
- * Floating playfully and gracefully above the miniature world,
- * fully integrated into the 3D scene.
+ * Dynamically scales and positions based on viewport dimensions
+ * so it never collides or overflows on mobile, tablets, or ultrawide screens.
  */
 export const TextSomewhere3D: React.FC<TextSomewhere3DProps> = ({ atmosphereMode }) => {
   const groupRef = useRef<THREE.Group>(null);
+  const { viewport, size } = useThree();
+  const aspect = size.width / Math.max(1, size.height);
+
+  // Adaptively scale typography to never exceed available viewport width
+  // Standard text width is ~8.2 units at font size 1.25.
+  const textScale = Math.min(1.0, Math.max(0.45, viewport.width / 9.6));
+
+  // In portrait mode, adjust Y position relative to planet top (radius 4.4)
+  const baseY = aspect < 1.0 ? 4.9 : 5.2;
 
   // Colors adaptive to atmosphere
   const textColor = atmosphereMode === 'night' ? '#faedcd' : '#fffdf7';
@@ -24,16 +33,20 @@ export const TextSomewhere3D: React.FC<TextSomewhere3DProps> = ({ atmosphereMode
     if (groupRef.current) {
       // Gentle breathing float
       const t = clock.getElapsedTime() * 0.8;
-      groupRef.current.position.y = 5.2 + Math.sin(t) * 0.12;
+      groupRef.current.position.y = baseY + Math.sin(t) * 0.1;
     }
   });
 
   return (
-    <group ref={groupRef} position={[0, 5.2, 0]}>
+    <group
+      ref={groupRef}
+      position={[0, baseY, 0]}
+      scale={[textScale, textScale, textScale]}
+    >
       <Float
         speed={1.5}
-        rotationIntensity={0.12}
-        floatIntensity={0.2}
+        rotationIntensity={0.08}
+        floatIntensity={0.16}
       >
         {/* Drop Shadow Offset Layer */}
         <Text
@@ -61,4 +74,3 @@ export const TextSomewhere3D: React.FC<TextSomewhere3DProps> = ({ atmosphereMode
     </group>
   );
 };
-
