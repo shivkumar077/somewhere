@@ -1,36 +1,35 @@
 # SOMEWHERE
 
-> Somewhere is an interactive, hand-crafted 3D world that tells the story of an engineer through exploration, characters, places, and projects.
+> An interactive, hand-crafted 3D world that tells the story of an engineer through exploration, characters, places, and projects.
 
 ---
 
-## 🌟 Milestone 02: World Architecture & Art Direction (Target Progress: ~30%)
+## 🌟 Landing Experience Refinement (Prompt 04)
 
-Milestone 02 transforms the initial rotating miniature planet into a cohesive, storybook-inspired miniature town with an enforced single source of truth (`CANONICAL_WORLD`) powering dual future-compatible rendering paths.
+Building upon the Milestone 02 architecture, this update refines the visitor experience to closely match the atmosphere, typography balance, and serene charm of the reference design:
 
-### 🏛️ Key Milestone 02 Accomplishments
+### 🎨 Key Refinements
 
-- **Canonical World Manifest (`src/world/worldData.ts`)**:
-  - Definitive single source of truth for the entire town.
-  - 4 Cultural Districts:
-    - *Town Center & Market Plaza*: Grand Town Hall, Cinnamon Hearth Bakery, Weaver's Guildhouse, Central Fountain, Market Stalls, Timber Cart, Cobblestone High Street.
-    - *Meadow Mill & Allotments*: High Meadow Windmill with animated rotating sails, Gardener's Thatched Cottage, Apple Orchards, Fenced Vegetable Allotment.
-    - *Harbor & Azure Lagoon*: Beacon Point Lighthouse, Fisherman's Boathouse on Stilts, Stone Arch Bridge, Moored Rowboat, Whispering Pond, Azure Lagoon with ripple animations.
-    - *Stargazer Bluffs & Tea Terraces*: Stargazer Dome Observatory with celestial telescope, Cloudcrest Tea Pavilion, Botanical Orangery Greenhouse, Bookbinder's Gabled Cottage, Cherry Blossom Groves.
-- **Dual-Rendering Pipeline Architecture**:
-  - **Path 1 — Miniature Planet Renderer (`MiniaturePlanet.tsx`)**: Maps `(lat, lon, altitude)` via `getSphereTransform` onto a 3D sphere of radius 4.4, automatically orienting models along outward surface normals with local yaw.
-  - **Path 2 — Walkable World Renderer (`src/world/WalkableWorldRenderer.tsx`)**: Maps `(flatX, flatZ, altitude)` via `getFlatWorldTransform` onto a planar terrain grid with Catmull-Rom extruded cobblestone roads.
-  - *Proof of Sync*: Modifying or adding any building or prop in `CANONICAL_WORLD` automatically updates both the spherical miniature and walkable world.
-- **Art Bible & Storybook Aesthetic**:
-  - Hand-crafted pastel palette (alabaster cream, terracotta coral, moss pine green, sage, seafoam slate, azure lagoon, copper patina, cherry blossom pink).
-  - Rounded silhouettes, soft chamfers, timber trim, smoking chimneys, glowing window panes.
-  - Absolutely zero cyberpunk, neon grids, generic SaaS dashboards, or glossy plastic shaders.
-- **Interactive Storybook Cards**:
-  - Real-time hover and selection of town landmarks displaying district badges, resident identities, story snippets, and amenities.
-- **Dual View Mode Switcher**:
-  - Toggle seamlessly between **Spherical Island** and **Walkable Grid** views to inspect the architectural synchronisation live in browser.
-- **100% Universal Responsive Design**:
-  - Fully tested across 16 viewports from 280px foldable narrow cover to 2560px ultrawide displays.
+1. **Branding Removal**:
+   - Removed the internal project name and large 3D typography from the opening scene.
+   - Primary button simplified to read simply `ENTER`.
+   - Clean, uncluttered storybook aesthetic without distracting taglines or logos.
+2. **Recreated Welcome-Text Composition**:
+   - Compact stacked typography: `HELLO / THERE / YOU`.
+   - Horizontally centered directly above the planet horizon.
+   - Tight line-height (0.88) with playful staggered spring entrance via GSAP (`y: 28 -> 0`, `opacity: 0 -> 1`).
+   - Completely responsive without colliding or overflowing on mobile, tablet, or ultrawide screens.
+3. **Non-Interactive Rotating Planet**:
+   - Planet rotates automatically and gently with constant smooth angular velocity.
+   - Dragging, cursor rotating, touch gestures, wheel zooming, and camera panning are completely disabled on the landing page.
+   - `ENTER` remains the focal, primary landing interaction.
+4. **Recalibrated Camera Framing**:
+   - Camera position and responsive distance scaled adaptively to give the miniature planet generous breathing room around all edges.
+   - Planet is comfortably visible on initial load across 16 tested viewports.
+5. **Soothing Ambient Soundtrack**:
+   - Original, peaceful ambient music box / Rhodes instrumental loop (`public/audio/cozy-ambient.wav`).
+   - Discreet `AudioControl` button with warm volume fade-in and fade-out.
+   - 100% compliant with browser autoplay policies.
 
 ---
 
@@ -52,11 +51,11 @@ npm run dev
 # Run canonical world manifest integrity verification
 npx vite-node test-world-manifest.mjs
 
-# Run automated 16-viewport responsive test suite
+# Run automated 16-viewport responsive & refinement test suite
 node test-responsive.mjs
 
-# Capture multi-angle visual screenshots
-node capture-milestone-02.mjs
+# Capture visual screenshots
+node capture-refinement.mjs
 
 # Build production bundle
 npm run build
@@ -70,25 +69,25 @@ npm run lint
 ## 🧪 Testing & Verification Results
 
 1. **Canonical Manifest Integrity Test (`test-world-manifest.mjs`)**:
-   - `CANONICAL_WORLD` v2.0.0 passed with 100% integrity.
-   - 11 Landmark Buildings & 32 Props verified with unique IDs and valid coordinate bounds.
-   - Dual transform math (`getSphereTransform` & `getFlatWorldTransform`) verified with zero NaN values.
-   - Single Source of Truth synchronization verified across simulated building mutations.
-
-2. **Universal Responsive Test Suite (`test-responsive.mjs`)**:
+   - **100% PASS**: 11 Landmark Buildings & 32 Props verified with unique IDs and valid coordinate bounds.
+2. **Universal Responsive & Refinement Test Suite (`test-responsive.mjs`)**:
    - **16 of 16 Viewports Passed (100%)**:
-     - 320px, 360px, 375px, 390px, 430px mobile widths (portrait & landscape)
-     - 280px narrow foldable cover & 884px expanded foldable layouts
-     - 600px, 768px, 1024px tablets (portrait & landscape)
-     - 1280px laptop, 1440px standard desktop, 1920px large desktop, 2560px ultrawide
-     - Orientation flip (portrait -> landscape) and `prefers-reduced-motion`
+     - No public-facing SOMEWHERE heading or logo.
+     - Primary button reads exactly `ENTER`.
+     - Welcome lines `HELLO / THERE / YOU` centered and in bounds.
+     - Planet drag/zoom disabled; automatic rotation confirmed.
+     - Audio toggle active with graceful fallback.
+     - 0 horizontal or vertical overflow across all 16 screen sizes.
+3. **Production Build (`tsc && vite build`)**:
+   - Clean bundle built in 12.69s.
 
 ---
 
 ## 🗺️ Progress & Roadmap
 
-- [x] **Milestone 01**: Cinematic 3D Landing Page (~15%)
+- [x] **Milestone 01**: Cinematic 3D Landing Page Foundation (~15%)
 - [x] **Milestone 02**: World Architecture & Art Direction (~30%)
-- [ ] **Milestone 03**: Character & Exploration Mechanics (~50%)
-- [ ] **Milestone 04**: Interactive Buildings & Content System (~70%)
+- [x] **Refinement**: Landing Experience, Audio & Composition (~35%)
+- [ ] **Milestone 03**: Character & Exploration Mechanics (~55%)
+- [ ] **Milestone 04**: Interactive Buildings & Content System (~75%)
 - [ ] **Milestone 05**: Polish, Soundscapes & Production Release (~100%)

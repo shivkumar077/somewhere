@@ -1,6 +1,6 @@
-import React, { useRef, useMemo, useState } from 'react';
+import React, { useRef, useMemo } from 'react';
 import * as THREE from 'three';
-import { useFrame, ThreeEvent } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
 import { WorldDefinition, BuildingItem } from '../../world/types';
 import { getSphereTransform, latLonToSpherePosition } from '../../world/projection';
 import { BuildingRenderer } from './BuildingModels';
@@ -30,9 +30,6 @@ export const MiniaturePlanet: React.FC<MiniaturePlanetProps> = ({
   onSelectBuilding,
 }) => {
   const planetRef = useRef<THREE.Group>(null);
-  const [isUserDragging, setIsUserDragging] = useState(false);
-  const previousPointer = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const spinVelocity = useRef(0.06);
 
   // Precompute building transforms from canonical coordinates
   const buildingTransforms = useMemo(() => {
@@ -120,40 +117,13 @@ export const MiniaturePlanet: React.FC<MiniaturePlanetProps> = ({
   useFrame((_, delta) => {
     if (!planetRef.current) return;
 
-    if (!isUserDragging && !isEntering) {
-      planetRef.current.rotation.y += spinVelocity.current * delta;
-      spinVelocity.current = THREE.MathUtils.lerp(spinVelocity.current, 0.065, delta * 0.8);
+    if (!isEntering) {
+      planetRef.current.rotation.y += 0.055 * delta;
     }
   });
 
-  // Pointer drag to spin world
-  const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
-    e.stopPropagation();
-    setIsUserDragging(true);
-    previousPointer.current = { x: e.clientX, y: e.clientY };
-  };
-
-  const handlePointerMove = (e: ThreeEvent<PointerEvent>) => {
-    if (!isUserDragging || !planetRef.current || isEntering) return;
-    const deltaX = e.clientX - previousPointer.current.x;
-    previousPointer.current = { x: e.clientX, y: e.clientY };
-
-    planetRef.current.rotation.y += deltaX * 0.005;
-    spinVelocity.current = deltaX * 0.03;
-  };
-
-  const handlePointerUp = () => {
-    setIsUserDragging(false);
-  };
-
   return (
-    <group
-      ref={planetRef}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerLeave={handlePointerUp}
-    >
+    <group ref={planetRef}>
       {/* 1. Main Grassy Planet Island */}
       <mesh receiveShadow castShadow>
         <sphereGeometry args={[world.planetRadius, 64, 64]} />

@@ -14,9 +14,23 @@
 
 ---
 
-## 2. Landmark Buildings (11 Canonical Entities)
+## 2. Audio & Soundscapes (Prompt 04 Refinement)
 
-All models are authored natively in Three.js / React Three Fiber procedural assemblies (`src/components/canvas/BuildingModels.tsx`), ensuring zero load time, 100% stylistic cohesion, and dynamic color theme reactivity:
+A gentle, peaceful, organic instrumental soundtrack designed specifically to complement the illustrated miniature world without dominating the atmosphere.
+
+| Attribute | Details |
+| :--- | :--- |
+| **Asset Path** | `public/audio/cozy-ambient.wav` |
+| **Duration & Format** | 32.0s seamless loop, 44.1 kHz, 16-bit Stereo PCM WAV (lossless) |
+| **Musical Composition** | Peaceful ambient Rhodes/music-box chords in C major / A minor pentatonic (`Cmaj9`, `Fmaj7#11`, `Am9`, `Gsus4`) with delicate crystalline chime accents. No vocals, no harsh percussion, no aggressive melodies. |
+| **Playback & Controls** | Managed via `src/utils/audioManager.ts` with exponential/linear volume fade-in (1.4s) and fade-out (0.8s). Starts playback only after user gesture to conform to browser autoplay policies. |
+| **Licensing & Origin** | **Original Composition (MIT License)** — Procedurally synthesized and composed specifically for this project. 100% royalty-free, copyright-free, no external unverified downloads. |
+
+---
+
+## 3. Landmark Buildings (11 Canonical Entities)
+
+Authored natively in Three.js / React Three Fiber procedural assemblies (`src/components/canvas/BuildingModels.tsx`), ensuring zero load time, 100% stylistic cohesion, and dynamic color theme reactivity:
 
 | Building ID | Canonical Name | District | Category | Asset Key | Key Visual Features |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -34,7 +48,7 @@ All models are authored natively in Three.js / React Three Fiber procedural asse
 
 ---
 
-## 3. Environmental Props & Foliage (32 Canonical Entities)
+## 4. Environmental Props & Foliage (32 Canonical Entities)
 
 Authored in `src/components/canvas/PropModels.tsx`:
 
@@ -59,28 +73,12 @@ Authored in `src/components/canvas/PropModels.tsx`:
 
 ---
 
-## 4. Topography & Infrastructure
-
-- **Terrain Features**:
-  - `hill-windmill`: Grassy knoll providing elevation for the mill.
-  - `hill-observatory`: High rocky crag holding the telescope above the village tree line.
-  - `hill-tea-knoll`: Sheltered plateau overlooking the bluffs.
-  - `water-whispering-pond`: Soft blue inland freshwater spring.
-  - `water-beacon-lagoon`: Coastal seawater lagoon with gently undulating surface waves.
-- **Paths & Highways**:
-  - `path-high-street`: Cobblestone arterial connecting Town Plaza to Bakery and West gate.
-  - `path-windmill-ridge`: Gradual gravel incline leading to the Windmill.
-  - `path-harbor-ramble`: Winding stone steps descending past cliffs down to the pier.
-  - `path-lake-run`: Meadow path curving along the shore of Whispering Pond.
-  - `path-stargazer-ascent`: Switchback mountain trail reaching the high Observatory.
-
----
-
-## 5. Licensing & Attribution
+## 5. Licensing & Attribution Summary
 
 | Resource | License | Source / Author |
 | :--- | :--- | :--- |
-| **All 3D Buildings & Prop Geometries** | MIT | Original custom procedural procedural models created for Somewhere |
+| **All 3D Buildings & Prop Geometries** | MIT | Original custom procedural models created for this project |
+| **Ambient Instrumental Soundtrack** | MIT | Original procedural composition created for this project |
 | **Fredoka & Plus Jakarta Sans Fonts** | SIL Open Font License 1.1 | Google Fonts (Milena Brandao, Gilbert Bonfim) |
 | **Lucide React Icons** | ISC | Lucide Authors |
 | **Three.js & R3F Runtime** | MIT | Three.js Authors & Poimandres |

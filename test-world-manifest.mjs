@@ -114,7 +114,7 @@ if (errors.length > 0) {
 } else {
   console.log('\n======================================================');
   console.log('✓ CANONICAL WORLD MANIFEST INTEGRITY: 100% PASS');
-  console.log('✓ Unique ID enforcement: 11 landmark buildings, 26 props verified.');
+  console.log(`✓ Unique ID enforcement: 11 landmark buildings, ${CANONICAL_WORLD.props.length} props verified.`);
   console.log('✓ Spherical coordinate bounds [-90,90] and [-180,180] valid across all assets.');
   console.log('✓ Dual rendering path transforms (Spherical & Flat) verified with zero NaN values.');
   console.log('✓ 4 Districts, 8 Terrain Features, 5 Interconnected Paths verified.');

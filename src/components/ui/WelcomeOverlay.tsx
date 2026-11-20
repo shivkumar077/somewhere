@@ -2,9 +2,10 @@ import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { CONTENT_CONFIG } from '../../config/contentConfig';
 import { BuildingItem } from '../../world/types';
-import { Sparkles, Compass, ArrowRight, RotateCcw, MapPin, Layers } from 'lucide-react';
+import { Compass, ArrowRight, RotateCcw, MapPin, Layers } from 'lucide-react';
 import { useResponsive } from '../../hooks/useResponsive';
 import { ViewMode } from '../canvas/SceneCanvas';
+import { AudioControl } from './AudioControl';
 
 interface WelcomeOverlayProps {
   isEntered: boolean;
@@ -31,9 +32,9 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
 }) => {
   const welcomeTextRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const { isNarrowFoldable, isSmallMobile, isShortLandscape } = useResponsive();
+  const { isShortLandscape, isSmallMobile } = useResponsive();
 
-  // Entrance animation for the 3-line welcome message
+  // Staggered playful entrance for the compact 3-line welcome message
   useEffect(() => {
     if (isEntered || isTransitioning) return;
 
@@ -45,14 +46,15 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
 
     gsap.fromTo(
       lines,
-      { y: 20, opacity: 0 },
+      { y: 28, opacity: 0, scale: 0.95 },
       {
         y: 0,
         opacity: 1,
+        scale: 1,
         duration: 0.8,
-        stagger: 0.15,
-        ease: 'power3.out',
-        delay: 0.25,
+        stagger: 0.12,
+        ease: 'back.out(1.3)',
+        delay: 0.15,
       }
     );
 
@@ -65,7 +67,7 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
           opacity: 1,
           duration: 0.7,
           ease: 'back.out(1.5)',
-          delay: 0.75,
+          delay: 0.65,
         }
       );
     }
@@ -88,7 +90,7 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
         overflow: 'hidden',
       }}
     >
-      {/* Top Header / Branding */}
+      {/* Top Header: Discreet Audio Control on the Left (Atmosphere is Top-Right) */}
       <div
         style={{
           display: 'flex',
@@ -98,34 +100,7 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
         }}
       >
         <div style={{ pointerEvents: 'auto' }}>
-          <div
-            data-testid="milestone-badge"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              backgroundColor: 'rgba(255, 255, 255, 0.78)',
-              backdropFilter: 'blur(8px)',
-              padding: isNarrowFoldable ? '3px 8px' : isSmallMobile ? '4px 10px' : '5px 12px',
-              borderRadius: '24px',
-              border: '1px solid rgba(255, 255, 255, 0.4)',
-              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05)',
-            }}
-          >
-            <Sparkles size={isNarrowFoldable ? 11 : isSmallMobile ? 12 : 14} color="#e76f51" />
-            <span
-              style={{
-                fontSize: isNarrowFoldable ? '9px' : isSmallMobile ? '10px' : '11px',
-                fontWeight: 700,
-                color: '#4a3b32',
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                fontFamily: "'Fredoka', sans-serif",
-              }}
-            >
-              {isNarrowFoldable ? 'M02' : 'MILESTONE 02'}
-            </span>
-          </div>
+          <AudioControl />
         </div>
       </div>
 
@@ -135,7 +110,7 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
           data-testid="arrived-card"
           style={{
             alignSelf: 'center',
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            backgroundColor: 'rgba(255, 255, 255, 0.92)',
             backdropFilter: 'blur(16px)',
             borderRadius: '24px',
             padding: isShortLandscape ? '14px 24px' : 'clamp(20px, 4vw, 32px)',
@@ -173,7 +148,7 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
               color: '#3d312a',
             }}
           >
-            Welcome to Somewhere!
+            Welcome to the Village!
           </h2>
 
           <p
@@ -252,17 +227,35 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
           </div>
         </div>
       ) : (
-        /* Left Hero Welcome Message */
+        /* Recreated Welcome Text: Centered, Harmoniously Integrated Above Planet */
         <div
           ref={welcomeTextRef}
           style={{
-            maxWidth: 'min(380px, 85vw)',
+            position: 'absolute',
+            top: isShortLandscape
+              ? 'clamp(28px, 6vh, 44px)'
+              : 'clamp(52px, 8.5vh, 92px)',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
             pointerEvents: 'none',
             userSelect: 'none',
-            marginBottom: isShortLandscape ? '4px' : '8px',
+            zIndex: 12,
+            width: '100%',
+            maxWidth: '92vw',
           }}
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              lineHeight: 0.88,
+            }}
+          >
             {CONTENT_CONFIG.welcomeLines.map((line, idx) => (
               <span
                 key={idx}
@@ -270,32 +263,22 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
                 style={{
                   fontFamily: "'Fredoka', sans-serif",
                   fontSize: isShortLandscape
-                    ? 'clamp(20px, 4.5vh, 28px)'
-                    : 'clamp(28px, 6.5vw, 54px)',
+                    ? 'clamp(20px, 4.8vh, 26px)'
+                    : isSmallMobile
+                    ? 'clamp(28px, 8vw, 36px)'
+                    : 'clamp(34px, 5.2vw, 56px)',
                   fontWeight: 700,
-                  lineHeight: 0.95,
-                  letterSpacing: '0.04em',
-                  color: '#3d312a',
-                  textShadow: '0 2px 10px rgba(255, 255, 255, 0.85), 0 1px 3px rgba(0, 0, 0, 0.1)',
+                  letterSpacing: '0.03em',
+                  color: '#34261f',
+                  textShadow:
+                    '0 2px 14px rgba(255, 255, 255, 0.95), 0 1px 4px rgba(0, 0, 0, 0.12)',
+                  display: 'inline-block',
                 }}
               >
                 {line}
               </span>
             ))}
           </div>
-
-          <p
-            style={{
-              marginTop: isShortLandscape ? '4px' : '8px',
-              fontSize: isShortLandscape ? '12px' : 'clamp(12px, 2.5vw, 15px)',
-              fontWeight: 500,
-              color: '#5c4d3c',
-              lineHeight: 1.35,
-              textShadow: '0 1px 4px rgba(255, 255, 255, 0.9)',
-            }}
-          >
-            {CONTENT_CONFIG.tagline}
-          </p>
         </div>
       )}
 
@@ -314,7 +297,7 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
           <div
             data-testid="building-tooltip"
             style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.92)',
+              backgroundColor: 'rgba(255, 255, 255, 0.94)',
               backdropFilter: 'blur(10px)',
               padding: '10px 18px',
               borderRadius: '18px',
@@ -400,13 +383,13 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
           </div>
         )}
 
-        {/* ENTER Button */}
+        {/* ENTER Button - Primary Interaction */}
         {!isEntered && (
           <button
             ref={buttonRef}
             onClick={onEnter}
             disabled={isTransitioning}
-            aria-label="Enter Somewhere Village"
+            aria-label="Enter"
             style={{
               pointerEvents: 'auto',
               display: 'inline-flex',
@@ -418,14 +401,14 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
               border: '2px solid #fefae0',
               borderRadius: '32px',
               padding: isShortLandscape
-                ? '9px 22px'
+                ? '8px 22px'
                 : isSmallMobile
-                ? '12px 24px'
-                : 'clamp(12px, 2.5vw, 15px) clamp(24px, 4vw, 36px)',
-              fontSize: isShortLandscape || isSmallMobile ? '14px' : 'clamp(14px, 2.2vw, 17px)',
+                ? '10px 24px'
+                : 'clamp(11px, 2.2vw, 14px) clamp(26px, 3.8vw, 36px)',
+              fontSize: isShortLandscape || isSmallMobile ? '14px' : 'clamp(14px, 2vw, 16px)',
               fontWeight: 700,
               fontFamily: "'Fredoka', sans-serif",
-              letterSpacing: '0.05em',
+              letterSpacing: '0.06em',
               cursor: isTransitioning ? 'default' : 'pointer',
               boxShadow: '0 6px 20px rgba(231, 111, 81, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3)',
               transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease',
@@ -447,21 +430,6 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
             <span>{CONTENT_CONFIG.enterButtonText}</span>
             <ArrowRight size={16} />
           </button>
-        )}
-
-        {/* Subtle instructions hint */}
-        {!isEntered && (
-          <div
-            style={{
-              fontSize: isShortLandscape ? '10px' : '11px',
-              color: '#5c4d3c',
-              textShadow: '0 1px 3px rgba(255, 255, 255, 0.8)',
-              fontWeight: 500,
-              textAlign: 'center',
-            }}
-          >
-            Drag to gently spin • Tap buildings to inspect
-          </div>
         )}
       </div>
     </div>

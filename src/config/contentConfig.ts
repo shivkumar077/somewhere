@@ -14,16 +14,15 @@ export interface ContentConfig {
 }
 
 export const CONTENT_CONFIG: ContentConfig = {
-  siteTitle: 'SOMEWHERE',
-  tagline: 'An illustrated miniature world',
+  siteTitle: 'Somewhere',
+  tagline: '',
   welcomeLines: [
     'HELLO',
     'THERE',
     'YOU',
   ],
-  enterButtonText: 'ENTER SOMEWHERE',
-  milestoneTitle: 'MILESTONE 01',
+  enterButtonText: 'ENTER',
+  milestoneTitle: 'Milestone',
   milestoneDescription: 'The Rotating Miniature Town',
-  footerCredit: 'Crafted with care for Somewhere — Milestone 01',
+  footerCredit: 'Crafted with care',
 };
-

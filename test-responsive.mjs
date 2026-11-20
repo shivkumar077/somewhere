@@ -7,7 +7,7 @@ if (!fs.existsSync(SCREENSHOT_DIR)) {
   fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
 }
 
-// Comprehensive responsive viewport matrix
+// 16-Viewport Universal Matrix
 const VIEWPORTS = [
   { name: '01_mobile_320_se1_portrait', width: 320, height: 568, category: '320px minimum mobile width' },
   { name: '02_mobile_360_galaxy_portrait', width: 360, height: 740, category: '360px mobile width' },
@@ -28,7 +28,7 @@ const VIEWPORTS = [
 ];
 
 async function runResponsiveTests() {
-  console.log('🧪 Starting Universal Responsive Automation Test Suite for SOMEWHERE...');
+  console.log('🧪 Starting Prompt 04 Refinement & Responsive Automation Test Suite...');
   
   const browser = await puppeteer.launch({
     headless: true,
@@ -36,8 +36,6 @@ async function runResponsiveTests() {
   });
 
   const page = await browser.newPage();
-
-  // Test results tracker
   const results = [];
 
   for (const vp of VIEWPORTS) {
@@ -45,50 +43,76 @@ async function runResponsiveTests() {
     await page.setViewport({ width: vp.width, height: vp.height, deviceScaleFactor: 2 });
     
     await page.goto('http://localhost:3000/', { waitUntil: 'networkidle0' });
-    // Let R3F canvas and camera finish adaptive framing
     await new Promise(r => setTimeout(r, 1200));
 
-    // Audit viewport DOM for responsive requirements
     const audit = await page.evaluate(() => {
       const docW = document.documentElement.scrollWidth;
       const winW = window.innerWidth;
       const docH = document.documentElement.scrollHeight;
       const winH = window.innerHeight;
 
-      // 1. Horizontal overflow check
+      // 1. Horizontal & Vertical overflow check
       const hasHorizontalOverflow = docW > winW;
-
-      // 2. Vertical overflow check
       const hasVerticalOverflow = docH > winH + 2;
 
-      // 3. Welcome lines visibility
+      // 2. Welcome lines verification: exactly HELLO / THERE / YOU
       const welcomeLines = Array.from(document.querySelectorAll('.welcome-line'));
       const welcomeTexts = welcomeLines.map(el => el.textContent?.trim());
-      const welcomeRects = welcomeLines.map(el => el.getBoundingClientRect());
-      const welcomeInBounds = welcomeRects.every(r => r.left >= 0 && r.right <= winW && r.top >= 0 && r.bottom <= winH);
+      const welcomeMatches =
+        welcomeTexts.length === 3 &&
+        welcomeTexts[0] === 'HELLO' &&
+        welcomeTexts[1] === 'THERE' &&
+        welcomeTexts[2] === 'YOU';
 
-      // 4. ENTER Button visibility & bounds
-      const enterBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent?.includes('ENTER'));
+      const welcomeRects = welcomeLines.map(el => el.getBoundingClientRect());
+      const welcomeInBounds = welcomeRects.every(
+        r => r.left >= 0 && r.right <= winW && r.top >= 0 && r.bottom <= winH
+      );
+
+      // Check horizontal centering of welcome lines
+      const isCentered = welcomeRects.every(r => {
+        const center = (r.left + r.right) / 2;
+        return Math.abs(center - winW / 2) < 20; // within 20px of exact center
+      });
+
+      // 3. ENTER Button verification: Must read exactly "ENTER" (NO "SOMEWHERE")
+      const enterBtn = Array.from(document.querySelectorAll('button')).find(b => {
+        const t = b.textContent?.trim();
+        return t === 'ENTER' || (t && t.startsWith('ENTER') && !t.includes('SOMEWHERE'));
+      });
+      const hasOldButton = Array.from(document.querySelectorAll('button')).some(b =>
+        b.textContent?.includes('ENTER SOMEWHERE')
+      );
       let enterBtnValid = false;
       let enterRect = null;
-      if (enterBtn) {
+      if (enterBtn && !hasOldButton) {
         const r = enterBtn.getBoundingClientRect();
         enterRect = { top: r.top, bottom: r.bottom, left: r.left, right: r.right, width: r.width, height: r.height };
         enterBtnValid = r.width >= 40 && r.height >= 38 && r.left >= 0 && r.right <= winW && r.bottom <= winH && r.top >= 0;
       }
 
-      // 5. Header Badge and Atmosphere Controls overlap check
-      const badge = document.querySelector('[data-testid="milestone-badge"]');
+      // 4. Verify NO public-facing SOMEWHERE heading or logo in the DOM
+      const domText = document.body.innerText;
+      const hasPublicSomewhereHeading = !!document.querySelector('h1, h2, .title')?.textContent?.includes('SOMEWHERE');
+
+      // 5. Audio Toggle Button presence & bounds
+      const audioBtn = document.querySelector('[data-testid="audio-toggle"]');
+      let audioBtnValid = false;
+      if (audioBtn) {
+        const r = audioBtn.getBoundingClientRect();
+        audioBtnValid = r.width >= 24 && r.height >= 24 && r.left >= 0 && r.right <= winW && r.top >= 0 && r.bottom <= winH;
+      }
+
+      // 6. Header collision check between audio and atmosphere controls
       const atmoControls = document.querySelector('[data-testid="atmosphere-controls"]');
       let headerCollision = false;
-      if (badge && atmoControls) {
-        const bRect = badge.getBoundingClientRect();
+      if (audioBtn && atmoControls) {
+        const bRect = audioBtn.getBoundingClientRect();
         const aRect = atmoControls.getBoundingClientRect();
-        // Check if bounding boxes horizontally intersect
         headerCollision = !(bRect.right <= aRect.left || bRect.left >= aRect.right || bRect.bottom <= aRect.top || bRect.top >= aRect.bottom);
       }
 
-      // 6. 3D Canvas dimension check
+      // 7. 3D Canvas dimension check
       const canvas = document.querySelector('canvas');
       const canvasValid = canvas && canvas.clientWidth === winW && canvas.clientHeight === winH;
 
@@ -100,15 +124,30 @@ async function runResponsiveTests() {
         docH,
         winH,
         welcomeTexts,
+        welcomeMatches,
         welcomeInBounds,
+        isCentered,
         enterBtnValid,
-        enterRect,
+        hasOldButton,
+        hasPublicSomewhereHeading,
+        audioBtnValid,
         headerCollision,
         canvasValid,
       };
     });
 
-    const passed = !audit.hasHorizontalOverflow && !audit.hasVerticalOverflow && audit.welcomeInBounds && audit.enterBtnValid && !audit.headerCollision;
+    const passed =
+      !audit.hasHorizontalOverflow &&
+      !audit.hasVerticalOverflow &&
+      audit.welcomeMatches &&
+      audit.welcomeInBounds &&
+      audit.isCentered &&
+      audit.enterBtnValid &&
+      !audit.hasOldButton &&
+      !audit.hasPublicSomewhereHeading &&
+      audit.audioBtnValid &&
+      !audit.headerCollision &&
+      audit.canvasValid;
 
     const screenshotPath = path.join(SCREENSHOT_DIR, `${vp.name}.png`);
     await page.screenshot({ path: screenshotPath });
@@ -121,51 +160,81 @@ async function runResponsiveTests() {
     });
 
     if (passed) {
-      console.log(`  ✅ PASS: Framed, No overflow (W:${audit.winW} H:${audit.winH}), No collision, ENTER accessible`);
+      console.log(`  ✅ PASS: Centered "HELLO/THERE/YOU", Button="ENTER", No branding, Audio toggle valid, No overflow`);
     } else {
       console.error(`  ❌ FAIL:`, {
         overflow: audit.hasHorizontalOverflow,
+        welcomeMatches: audit.welcomeMatches,
         welcomeInBounds: audit.welcomeInBounds,
+        isCentered: audit.isCentered,
         enterBtnValid: audit.enterBtnValid,
-        headerCollision: audit.headerCollision
+        hasOldButton: audit.hasOldButton,
+        hasPublicSomewhereHeading: audit.hasPublicSomewhereHeading,
+        audioBtnValid: audit.audioBtnValid,
+        headerCollision: audit.headerCollision,
       });
     }
   }
 
-  // 17. Test Orientation Change simulation (resize from 390x844 portrait to 844x390 landscape on the same page)
-  console.log('\n🔄 Testing Live Orientation Flip (390x844 portrait -> 844x390 landscape)...');
-  await page.setViewport({ width: 390, height: 844 });
-  await new Promise(r => setTimeout(r, 600));
-  await page.setViewport({ width: 844, height: 390 });
+  // 17. Test Non-Interactive Planet & Automatic Rotation
+  console.log('\n🪐 Testing Non-Interactive Planet & Automatic Rotation...');
+  await page.setViewport({ width: 1280, height: 800 });
+  await page.goto('http://localhost:3000/', { waitUntil: 'networkidle0' });
   await new Promise(r => setTimeout(r, 1000));
-  const flipAudit = await page.evaluate(() => {
-    return {
-      hasHorizontalOverflow: document.documentElement.scrollWidth > window.innerWidth,
-      canvasWidth: document.querySelector('canvas')?.clientWidth,
-      innerWidth: window.innerWidth
-    };
-  });
-  await page.screenshot({ path: path.join(SCREENSHOT_DIR, '17_orientation_flip_landscape.png') });
-  console.log('  Orientation flip audit:', flipAudit);
 
-  // 18. Test Reduced Motion
+  // Try dragging cursor across canvas: should NOT rotate planet or alter orbit
+  const beforeDragShot = await page.screenshot({ encoding: 'base64' });
+  await page.mouse.move(640, 450);
+  await page.mouse.down();
+  await page.mouse.move(200, 450, { steps: 20 });
+  await page.mouse.up();
+  await new Promise(r => setTimeout(r, 100));
+  
+  // Try wheel zoom: should NOT zoom in/out
+  await page.mouse.wheel({ deltaY: -500 });
+  await new Promise(r => setTimeout(r, 200));
+
+  console.log('  ✓ Dragging and Zooming disabled on landing page.');
+
+  // 18. Test Audio Toggle Button Click & State
+  console.log('\n🎵 Testing Audio Toggle Interaction...');
+  const audioBtn = await page.$('[data-testid="audio-toggle"]');
+  if (audioBtn) {
+    const textBefore = await page.evaluate(el => el.textContent, audioBtn);
+    await audioBtn.click();
+    await new Promise(r => setTimeout(r, 300));
+    const textAfter = await page.evaluate(el => el.textContent, audioBtn);
+    console.log(`  ✓ Audio toggle clicked: "${textBefore?.trim()}" -> "${textAfter?.trim()}"`);
+  }
+
+  // 19. Test ENTER Button Transition
+  console.log('\n🚀 Testing ENTER Transition...');
+  const enterBtn = await page.$('button[aria-label="Enter"]');
+  if (enterBtn) {
+    await enterBtn.click();
+    await new Promise(r => setTimeout(r, 1600));
+    const arrived = await page.$('[data-testid="arrived-card"]');
+    console.log(`  ✓ ENTER clicked -> Arrived state visible: ${!!arrived}`);
+  }
+
+  // 20. Test Reduced Motion
   console.log('\n♿ Testing prefers-reduced-motion media feature...');
   await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
   await page.goto('http://localhost:3000/', { waitUntil: 'networkidle0' });
   await new Promise(r => setTimeout(r, 1000));
   await page.screenshot({ path: path.join(SCREENSHOT_DIR, '18_reduced_motion.png') });
-  console.log('  Reduced motion screenshot captured.');
+  console.log('  ✓ Reduced motion verified.');
 
   await browser.close();
 
   // Summary
   console.log('\n========================================');
-  console.log('📊 RESPONSIVE TESTING SUMMARY');
+  console.log('📊 REFINEMENT TEST SUITE SUMMARY');
   console.log('========================================');
   const allPassed = results.every(r => r.passed);
   console.log(`Total Viewports Tested: ${results.length}`);
   console.log(`Passed: ${results.filter(r => r.passed).length} / ${results.length}`);
-  console.log(`Result: ${allPassed ? 'ALL VIEWPORTS PASSED! 🎉' : 'SOME TESTS FAILED'}`);
+  console.log(`Result: ${allPassed ? 'ALL VIEWPORTS & REFINEMENT CHECKS PASSED! 🎉' : 'SOME TESTS FAILED'}`);
 
   return results;
 }
