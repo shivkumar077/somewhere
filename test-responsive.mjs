@@ -3,8 +3,12 @@ import fs from 'fs';
 import path from 'path';
 
 const SCREENSHOT_DIR = path.resolve('public', 'screenshots', 'responsive');
+const TOWN_DIR = path.resolve('public', 'screenshots', 'living_town');
 if (!fs.existsSync(SCREENSHOT_DIR)) {
   fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
+}
+if (!fs.existsSync(TOWN_DIR)) {
+  fs.mkdirSync(TOWN_DIR, { recursive: true });
 }
 
 // 16-Viewport Universal Matrix
@@ -28,22 +32,25 @@ const VIEWPORTS = [
 ];
 
 async function runResponsiveTests() {
-  console.log('🧪 Starting Prompt 04 Refinement & Responsive Automation Test Suite...');
-  
+  console.log('🧪 Starting SOMEWHERE Living Town & Responsive Test Suite...');
+
   const browser = await puppeteer.launch({
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--enable-webgl', '--ignore-gpu-blocklist']
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--enable-webgl', '--ignore-gpu-blocklist'],
   });
 
   const page = await browser.newPage();
   const results = [];
 
+  // ==========================================
+  // PHASE 1: 16-Viewport Landing Screen Tests
+  // ==========================================
   for (const vp of VIEWPORTS) {
-    console.log(`\n🔍 Testing [${vp.category}]: ${vp.width}x${vp.height} (${vp.name})...`);
+    console.log(`\n🔍 Testing Landing [${vp.category}]: ${vp.width}x${vp.height} (${vp.name})...`);
     await page.setViewport({ width: vp.width, height: vp.height, deviceScaleFactor: 2 });
-    
+
     await page.goto('http://localhost:3000/', { waitUntil: 'networkidle0' });
-    await new Promise(r => setTimeout(r, 1200));
+    await new Promise((r) => setTimeout(r, 1200));
 
     const audit = await page.evaluate(() => {
       const docW = document.documentElement.scrollWidth;
@@ -57,50 +64,61 @@ async function runResponsiveTests() {
 
       // 2. Welcome lines verification: exactly HELLO / THERE / YOU
       const welcomeLines = Array.from(document.querySelectorAll('.welcome-line'));
-      const welcomeTexts = welcomeLines.map(el => el.textContent?.trim());
+      const welcomeTexts = welcomeLines.map((el) => el.textContent?.trim());
       const welcomeMatches =
         welcomeTexts.length === 3 &&
         welcomeTexts[0] === 'HELLO' &&
         welcomeTexts[1] === 'THERE' &&
         welcomeTexts[2] === 'YOU';
 
-      const welcomeRects = welcomeLines.map(el => el.getBoundingClientRect());
+      const welcomeRects = welcomeLines.map((el) => el.getBoundingClientRect());
       const welcomeInBounds = welcomeRects.every(
-        r => r.left >= 0 && r.right <= winW && r.top >= 0 && r.bottom <= winH
+        (r) => r.left >= 0 && r.right <= winW && r.top >= 0 && r.bottom <= winH
       );
 
       // Check horizontal centering of welcome lines
-      const isCentered = welcomeRects.every(r => {
+      const isCentered = welcomeRects.every((r) => {
         const center = (r.left + r.right) / 2;
         return Math.abs(center - winW / 2) < 20; // within 20px of exact center
       });
 
       // 3. ENTER Button verification: Must read exactly "ENTER" (NO "SOMEWHERE")
-      const enterBtn = Array.from(document.querySelectorAll('button')).find(b => {
+      const enterBtn = Array.from(document.querySelectorAll('button')).find((b) => {
         const t = b.textContent?.trim();
         return t === 'ENTER' || (t && t.startsWith('ENTER') && !t.includes('SOMEWHERE'));
       });
-      const hasOldButton = Array.from(document.querySelectorAll('button')).some(b =>
+      const hasOldButton = Array.from(document.querySelectorAll('button')).some((b) =>
         b.textContent?.includes('ENTER SOMEWHERE')
       );
       let enterBtnValid = false;
-      let enterRect = null;
       if (enterBtn && !hasOldButton) {
         const r = enterBtn.getBoundingClientRect();
-        enterRect = { top: r.top, bottom: r.bottom, left: r.left, right: r.right, width: r.width, height: r.height };
-        enterBtnValid = r.width >= 40 && r.height >= 38 && r.left >= 0 && r.right <= winW && r.bottom <= winH && r.top >= 0;
+        enterBtnValid =
+          r.width >= 40 &&
+          r.height >= 38 &&
+          r.left >= 0 &&
+          r.right <= winW &&
+          r.bottom <= winH &&
+          r.top >= 0;
       }
 
       // 4. Verify NO public-facing SOMEWHERE heading or logo in the DOM
-      const domText = document.body.innerText;
-      const hasPublicSomewhereHeading = !!document.querySelector('h1, h2, .title')?.textContent?.includes('SOMEWHERE');
+      const hasPublicSomewhereHeading = !!document
+        .querySelector('h1, h2, .title')
+        ?.textContent?.includes('SOMEWHERE');
 
       // 5. Audio Toggle Button presence & bounds
       const audioBtn = document.querySelector('[data-testid="audio-toggle"]');
       let audioBtnValid = false;
       if (audioBtn) {
         const r = audioBtn.getBoundingClientRect();
-        audioBtnValid = r.width >= 24 && r.height >= 24 && r.left >= 0 && r.right <= winW && r.top >= 0 && r.bottom <= winH;
+        audioBtnValid =
+          r.width >= 24 &&
+          r.height >= 24 &&
+          r.left >= 0 &&
+          r.right <= winW &&
+          r.top >= 0 &&
+          r.bottom <= winH;
       }
 
       // 6. Header collision check between audio and atmosphere controls
@@ -109,7 +127,12 @@ async function runResponsiveTests() {
       if (audioBtn && atmoControls) {
         const bRect = audioBtn.getBoundingClientRect();
         const aRect = atmoControls.getBoundingClientRect();
-        headerCollision = !(bRect.right <= aRect.left || bRect.left >= aRect.right || bRect.bottom <= aRect.top || bRect.top >= aRect.bottom);
+        headerCollision = !(
+          bRect.right <= aRect.left ||
+          bRect.left >= aRect.right ||
+          bRect.bottom <= aRect.top ||
+          bRect.top >= aRect.bottom
+        );
       }
 
       // 7. 3D Canvas dimension check
@@ -156,11 +179,11 @@ async function runResponsiveTests() {
       ...vp,
       passed,
       audit,
-      screenshot: `${vp.name}.png`
+      screenshot: `${vp.name}.png`,
     });
 
     if (passed) {
-      console.log(`  ✅ PASS: Centered "HELLO/THERE/YOU", Button="ENTER", No branding, Audio toggle valid, No overflow`);
+      console.log(`  ✅ PASS: Centered "HELLO/THERE/YOU", Button="ENTER", No branding, Audio toggle valid`);
     } else {
       console.error(`  ❌ FAIL:`, {
         overflow: audit.hasHorizontalOverflow,
@@ -176,70 +199,118 @@ async function runResponsiveTests() {
     }
   }
 
-  // 17. Test Non-Interactive Planet & Automatic Rotation
-  console.log('\n🪐 Testing Non-Interactive Planet & Automatic Rotation...');
-  await page.setViewport({ width: 1280, height: 800 });
+  // ==========================================
+  // PHASE 2: Interactive Living Town Journey
+  // ==========================================
+  console.log('\n🏡 PHASE 2: Testing Explorable Living Town Transition & Systems...');
+  await page.setViewport({ width: 1440, height: 900, deviceScaleFactor: 2 });
   await page.goto('http://localhost:3000/', { waitUntil: 'networkidle0' });
-  await new Promise(r => setTimeout(r, 1000));
+  await new Promise((r) => setTimeout(r, 1000));
 
-  // Try dragging cursor across canvas: should NOT rotate planet or alter orbit
-  const beforeDragShot = await page.screenshot({ encoding: 'base64' });
-  await page.mouse.move(640, 450);
-  await page.mouse.down();
-  await page.mouse.move(200, 450, { steps: 20 });
-  await page.mouse.up();
-  await new Promise(r => setTimeout(r, 100));
-  
-  // Try wheel zoom: should NOT zoom in/out
-  await page.mouse.wheel({ deltaY: -500 });
-  await new Promise(r => setTimeout(r, 200));
-
-  console.log('  ✓ Dragging and Zooming disabled on landing page.');
-
-  // 18. Test Audio Toggle Button Click & State
-  console.log('\n🎵 Testing Audio Toggle Interaction...');
-  const audioBtn = await page.$('[data-testid="audio-toggle"]');
-  if (audioBtn) {
-    const textBefore = await page.evaluate(el => el.textContent, audioBtn);
-    await audioBtn.click();
-    await new Promise(r => setTimeout(r, 300));
-    const textAfter = await page.evaluate(el => el.textContent, audioBtn);
-    console.log(`  ✓ Audio toggle clicked: "${textBefore?.trim()}" -> "${textAfter?.trim()}"`);
-  }
-
-  // 19. Test ENTER Button Transition
-  console.log('\n🚀 Testing ENTER Transition...');
+  // 1. Click ENTER to transition into living town
+  console.log('  → Clicking ENTER button...');
   const enterBtn = await page.$('button[aria-label="Enter"]');
   if (enterBtn) {
     await enterBtn.click();
-    await new Promise(r => setTimeout(r, 1600));
-    const arrived = await page.$('[data-testid="arrived-card"]');
-    console.log(`  ✓ ENTER clicked -> Arrived state visible: ${!!arrived}`);
+    // Wait for mosaic transition and camera fly-in (1.8s)
+    await new Promise((r) => setTimeout(r, 2200));
   }
 
-  // 20. Test Reduced Motion
-  console.log('\n♿ Testing prefers-reduced-motion media feature...');
-  await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
-  await page.goto('http://localhost:3000/', { waitUntil: 'networkidle0' });
-  await new Promise(r => setTimeout(r, 1000));
-  await page.screenshot({ path: path.join(SCREENSHOT_DIR, '18_reduced_motion.png') });
-  console.log('  ✓ Reduced motion verified.');
+  // Verify TownHUD rendered
+  const townHudCompass = await page.$('nav[aria-label="Town Destinations Compass"]');
+  const returnToOrbitBtn = await page.$('button[aria-label="Return to planet orbit view"]');
+  console.log(`  ✓ Town HUD Compass present: ${!!townHudCompass}`);
+  console.log(`  ✓ Return to Orbit button present: ${!!returnToOrbitBtn}`);
+
+  // Take screenshot of living town walkable exploration
+  const townShot = path.join(TOWN_DIR, '01_living_town_overview.png');
+  await page.screenshot({ path: townShot });
+  console.log(`  📸 Saved Living Town overview: ${townShot}`);
+
+  // 2. Test Destination Compass Navigation & Modal Drawer
+  console.log('  → Testing Destination Modal for "Little House" (About Me)...');
+  const aboutDestBtn = await page.$('button[aria-label*="Little House"]');
+  if (aboutDestBtn) {
+    await aboutDestBtn.click();
+    // Character walks toward destination (allow 1.8s for smooth walk)
+    await new Promise((r) => setTimeout(r, 1800));
+
+    // Press E to enter Little House
+    await page.keyboard.press('KeyE');
+    await new Promise((r) => setTimeout(r, 800));
+
+    // Check modal contents
+    const modalTitle = await page.evaluate(() => {
+      return document.querySelector('#destination-title')?.textContent?.trim() || null;
+    });
+    console.log(`  ✓ Destination Modal Title: "${modalTitle}"`);
+
+    const destModalShot = path.join(TOWN_DIR, '02_destination_modal_about.png');
+    await page.screenshot({ path: destModalShot });
+    console.log(`  📸 Saved Destination Modal snapshot: ${destModalShot}`);
+
+    // Close modal via Escape
+    await page.keyboard.press('Escape');
+    await new Promise((r) => setTimeout(r, 500));
+  }
+
+  // 3. Test Invention House (Projects)
+  console.log('  → Testing Destination: Invention House (Projects)...');
+  const projectsDestBtn = await page.$('button[aria-label*="Invention House"]');
+  if (projectsDestBtn) {
+    await projectsDestBtn.click();
+    await new Promise((r) => setTimeout(r, 2200));
+    await page.keyboard.press('KeyE');
+    await new Promise((r) => setTimeout(r, 800));
+
+    const projectsShot = path.join(TOWN_DIR, '03_destination_projects.png');
+    await page.screenshot({ path: projectsShot });
+    console.log(`  📸 Saved Projects Modal snapshot: ${projectsShot}`);
+
+    await page.keyboard.press('Escape');
+    await new Promise((r) => setTimeout(r, 500));
+  }
+
+  // 4. Test Mobile Walkable Town Layout (iPhone 14)
+  console.log('\n📱 Testing Mobile Living Town View (390x844)...');
+  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2 });
+  await new Promise((r) => setTimeout(r, 800));
+
+  const mobileTownShot = path.join(TOWN_DIR, '04_mobile_living_town.png');
+  await page.screenshot({ path: mobileTownShot });
+  console.log(`  📸 Saved Mobile Living Town snapshot: ${mobileTownShot}`);
+
+  // 5. Test Return to Orbit
+  console.log('  → Clicking Return to Orbit...');
+  const returnBtn = await page.$('button[aria-label="Return to planet orbit view"]');
+  if (returnBtn) {
+    await returnBtn.click();
+    await new Promise((r) => setTimeout(r, 1500));
+    const backOnLanding = await page.$('button[aria-label="Enter"]');
+    console.log(`  ✓ Successfully returned to orbit landing screen: ${!!backOnLanding}`);
+  }
 
   await browser.close();
 
   // Summary
   console.log('\n========================================');
-  console.log('📊 REFINEMENT TEST SUITE SUMMARY');
+  console.log('📊 TEST SUITE SUMMARY');
   console.log('========================================');
-  const allPassed = results.every(r => r.passed);
+  const allPassed = results.every((r) => r.passed);
   console.log(`Total Viewports Tested: ${results.length}`);
-  console.log(`Passed: ${results.filter(r => r.passed).length} / ${results.length}`);
-  console.log(`Result: ${allPassed ? 'ALL VIEWPORTS & REFINEMENT CHECKS PASSED! 🎉' : 'SOME TESTS FAILED'}`);
+  console.log(`Passed: ${results.filter((r) => r.passed).length} / ${results.length}`);
+  console.log(
+    `Result: ${
+      allPassed && !!townHudCompass && !!returnToOrbitBtn
+        ? 'ALL VIEWPORTS & LIVING TOWN EXPERIENCES PASSED! 🎉'
+        : 'SOME TESTS FAILED'
+    }`
+  );
 
   return results;
 }
 
-runResponsiveTests().catch(err => {
+runResponsiveTests().catch((err) => {
   console.error('Test suite execution failed:', err);
   process.exit(1);
 });

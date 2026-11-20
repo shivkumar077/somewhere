@@ -7,10 +7,16 @@ import {
 } from './config/atmosphereConfig';
 import { SceneCanvas, ViewMode } from './components/canvas/SceneCanvas';
 import { WelcomeOverlay } from './components/ui/WelcomeOverlay';
+import { TownHUD } from './components/ui/TownHUD';
+import { DestinationModal } from './components/ui/DestinationModal';
+import { NPCDialogueModal } from './components/ui/NPCDialogueModal';
+import { AudioControl } from './components/ui/AudioControl';
 import { AtmosphereControls } from './components/ui/AtmosphereControls';
 import { BlockTransition } from './components/ui/BlockTransition';
 import { FallbackView } from './components/ui/FallbackView';
-import { BuildingItem } from './world/types';
+import { BuildingItem, NPCEntity, DestinationType } from './world/types';
+import { usePlayerMovement } from './hooks/usePlayerMovement';
+import { audioManager } from './utils/audioManager';
 
 function checkWebGLSupport(): boolean {
   try {
@@ -40,9 +46,22 @@ export const App: React.FC = () => {
   const [isEntered, setIsEntered] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('miniature');
 
-  // Interactive inspection state
+  // Interactive inspection and modal states
   const [hoveredBuilding, setHoveredBuilding] = useState<BuildingItem | null>(null);
   const [selectedBuilding, setSelectedBuilding] = useState<BuildingItem | null>(null);
+  const [selectedNPC, setSelectedNPC] = useState<NPCEntity | null>(null);
+
+  // Walkable Character Movement Engine
+  const {
+    position: playerPosition,
+    rotationY: playerRotation,
+    isWalking,
+    targetPoint,
+    nearbyDestination,
+    nearbyNPC,
+    setMoveTarget,
+    navigateToDestination,
+  } = usePlayerMovement(CANONICAL_WORLD, isEntered);
 
   // Check WebGL on mount
   useEffect(() => {
@@ -62,6 +81,25 @@ export const App: React.FC = () => {
     return () => clearInterval(timer);
   }, [isAutoTime]);
 
+  // Keyboard shortcut [E] for interacting with nearby building or NPC
+  useEffect(() => {
+    if (!isEntered) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'KeyE') {
+        if (selectedBuilding || selectedNPC) return;
+        if (nearbyDestination && nearbyDestination.destinationRole) {
+          setSelectedBuilding(nearbyDestination);
+        } else if (nearbyNPC) {
+          setSelectedNPC(nearbyNPC);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isEntered, nearbyDestination, nearbyNPC, selectedBuilding, selectedNPC]);
+
   const handleSetMode = useCallback((mode: AtmosphereMode, auto: boolean) => {
     setIsAutoTime(auto);
     if (auto) {
@@ -73,12 +111,15 @@ export const App: React.FC = () => {
 
   const handleEnter = useCallback(() => {
     if (isTransitioning || isEntered) return;
+    // Seamless audio play: does not restart or create duplicate nodes if already playing
+    audioManager.ensurePlaying().catch(() => {});
     setIsEntering(true);
     setIsTransitioning(true);
   }, [isTransitioning, isEntered]);
 
   const handleTransitionPeak = useCallback(() => {
     setIsEntered(true);
+    setViewMode('walkable');
   }, []);
 
   const handleTransitionComplete = useCallback(() => {
@@ -89,7 +130,17 @@ export const App: React.FC = () => {
     setIsEntered(false);
     setIsEntering(false);
     setViewMode('miniature');
+    setSelectedBuilding(null);
+    setSelectedNPC(null);
   }, []);
+
+  const handleNavigateToDestination = useCallback(
+    (destRole: DestinationType) => {
+      setSelectedNPC(null);
+      navigateToDestination(destRole);
+    },
+    [navigateToDestination]
+  );
 
   const formattedTime = useMemo(() => {
     return currentDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -110,16 +161,18 @@ export const App: React.FC = () => {
         overflow: 'hidden',
       }}
     >
-      {/* 1. 3D Scene Canvas */}
-      <SceneCanvas
-        world={CANONICAL_WORLD}
-        atmosphere={currentAtmosphere}
-        isEntering={isEntering}
-        isEntered={isEntered}
-        viewMode={viewMode}
-        onHoverBuilding={setHoveredBuilding}
-        onSelectBuilding={setSelectedBuilding}
-      />
+      {/* 1. Persistent Audio Control (Top-Left) */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 'max(14px, var(--sat))',
+          left: 'max(14px, var(--sal))',
+          zIndex: 35,
+          pointerEvents: 'auto',
+        }}
+      >
+        <AudioControl />
+      </div>
 
       {/* 2. Top-Right Atmosphere Mode Switcher */}
       <AtmosphereControls
@@ -129,20 +182,60 @@ export const App: React.FC = () => {
         onSetMode={handleSetMode}
       />
 
-      {/* 3. Welcome Message & ENTER Overlay */}
+      {/* 3. 3D Scene Canvas */}
+      <SceneCanvas
+        world={CANONICAL_WORLD}
+        atmosphere={currentAtmosphere}
+        isEntering={isEntering}
+        isEntered={isEntered}
+        viewMode={viewMode}
+        playerPosition={playerPosition}
+        playerRotation={playerRotation}
+        isWalking={isWalking}
+        targetPoint={targetPoint}
+        onGroundClick={setMoveTarget}
+        onHoverBuilding={setHoveredBuilding}
+        onSelectBuilding={setSelectedBuilding}
+        onSelectNPC={setSelectedNPC}
+      />
+
+      {/* 4. Landing Welcome Message & ENTER Overlay */}
       <WelcomeOverlay
         isEntered={isEntered}
         isTransitioning={isTransitioning}
-        viewMode={viewMode}
-        onToggleViewMode={() => setViewMode(v => v === 'miniature' ? 'walkable' : 'miniature')}
         onEnter={handleEnter}
-        onReturnToOrbit={handleReturnToOrbit}
         hoveredBuilding={hoveredBuilding}
         selectedBuilding={selectedBuilding}
         onClearSelectedBuilding={() => setSelectedBuilding(null)}
       />
 
-      {/* 4. Playful Mosaic Block Transition */}
+      {/* 5. Living Town HUD (Compass, Destinations, Prompts) */}
+      {isEntered && (
+        <TownHUD
+          nearbyDestination={nearbyDestination}
+          nearbyNPC={nearbyNPC}
+          onOpenDestination={setSelectedBuilding}
+          onOpenNPC={setSelectedNPC}
+          onNavigateToDestination={handleNavigateToDestination}
+          onReturnToOrbit={handleReturnToOrbit}
+          playerPosition={playerPosition}
+        />
+      )}
+
+      {/* 6. Destination Detail Modal Drawer */}
+      <DestinationModal
+        building={selectedBuilding}
+        onClose={() => setSelectedBuilding(null)}
+      />
+
+      {/* 7. NPC Story Dialogue Modal */}
+      <NPCDialogueModal
+        npc={selectedNPC}
+        onClose={() => setSelectedNPC(null)}
+        onNavigateToDestination={handleNavigateToDestination}
+      />
+
+      {/* 8. Playful Mosaic Block Transition */}
       <BlockTransition
         isActive={isTransitioning}
         onTransitionPeak={handleTransitionPeak}

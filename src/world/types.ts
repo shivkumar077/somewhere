@@ -3,7 +3,7 @@
  *
  * CRITICAL ARCHITECTURAL CONTRACT:
  * Both the spherical miniature planet renderer (Milestone 01/02)
- * AND the future walkable first/third-person world renderer
+ * AND the walkable living town renderer (Milestone 03 / Prompt 05)
  * read this SAME canonical definition.
  *
  * If a building or prop is added, moved, or deleted here,
@@ -17,9 +17,25 @@ export type BuildingCategory =
   | 'landmark'
   | 'agriculture'
   | 'coastal'
-  | 'craft';
+  | 'craft'
+  | 'scholarly'
+  | 'sanctuary';
+
+export type DestinationType =
+  | 'about'
+  | 'education'
+  | 'experience'
+  | 'projects'
+  | 'skills'
+  | 'contact';
 
 export type BuildingType =
+  | 'little-house'
+  | 'university'
+  | 'workshop'
+  | 'invention-house'
+  | 'library'
+  | 'post-office'
   | 'town-hall'
   | 'windmill'
   | 'bakery'
@@ -56,13 +72,11 @@ export type PropType =
 
 export interface CanonicalCoordinates {
   /**
-   * Latitude in degrees (-90 to +90) on the sphere,
-   * or maps to north/south in flat terrain coordinate system.
+   * Latitude in degrees (-90 to +90) on the sphere
    */
   lat: number;
   /**
-   * Longitude in degrees (-180 to +180) on the sphere,
-   * or maps to east/west in flat terrain coordinate system.
+   * Longitude in degrees (-180 to +180) on the sphere
    */
   lon: number;
   /**
@@ -89,6 +103,7 @@ export interface BuildingItem {
   name: string;
   type: BuildingType;
   category: BuildingCategory;
+  destinationRole?: DestinationType; // Exactly 6 primary functional destinations
   assetKey: string;
   description: string;
   coordinates: CanonicalCoordinates;
@@ -156,6 +171,21 @@ export interface DistrictItem {
   colorTag: string;
 }
 
+export interface NPCEntity {
+  id: string;
+  name: string;
+  role: string;
+  coordinates: CanonicalCoordinates;
+  rotationY: number;
+  dialogue: string[];
+  guidedDestination?: DestinationType;
+  visualTheme: {
+    jacketColor: string;
+    hatColor?: string;
+    pantsColor?: string;
+  };
+}
+
 export interface WorldDefinition {
   version: string;
   name: string;
@@ -166,4 +196,5 @@ export interface WorldDefinition {
   props: PropItem[];
   paths: PathSegment[];
   terrainFeatures: TerrainFeature[];
+  npcs: NPCEntity[];
 }

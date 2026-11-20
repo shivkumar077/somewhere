@@ -113,25 +113,34 @@ class AudioManager {
     if (!this.audio) return false;
 
     try {
-      this.audio.currentTime = this.audio.currentTime || 0;
-      const playPromise = this.audio.play();
-
-      if (playPromise !== undefined) {
-        await playPromise;
+      if (this.audio.paused) {
+        const playPromise = this.audio.play();
+        if (playPromise !== undefined) {
+          await playPromise;
+        }
       }
 
       this.isPlaying = true;
       this.isMuted = false;
-      this.fadeVolume(0, this.targetVolume, 1400);
+      this.fadeVolume(this.audio.volume, this.targetVolume, 1400);
       this.notify();
       return true;
     } catch (err) {
-      // Browser autoplay policy blocked playback or file missing
       console.warn('Audio playback could not start automatically (autoplay policy or missing file):', err);
       this.isPlaying = false;
       this.notify();
       return false;
     }
+  }
+
+  /**
+   * Ensure audio is playing without resetting currentTime if already active.
+   */
+  public async ensurePlaying(): Promise<boolean> {
+    if (this.isPlaying && this.audio && !this.audio.paused) {
+      return true;
+    }
+    return this.play();
   }
 
   /**

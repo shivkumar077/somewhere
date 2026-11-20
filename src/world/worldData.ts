@@ -4,13 +4,13 @@ import { WorldDefinition } from './types';
  * THE CANONICAL WORLD MANIFEST — SOMEWHERE
  *
  * This dataset is the definitive single source of truth for the entire town.
- * Both the rotating miniature planet renderer (Milestone 01/02) and the future
- * walkable exploration town derive their buildings, districts, props,
- * roads, and terrain features from here.
+ * Both the rotating miniature planet renderer (Milestone 01/02) and the
+ * walkable living town (Milestone 03 / Prompt 05) derive their buildings,
+ * districts, props, roads, terrain features, and NPCs from here.
  */
 
 export const CANONICAL_WORLD: WorldDefinition = {
-  version: '2.0.0',
+  version: '3.0.0',
   name: 'Somewhere Village',
   planetRadius: 4.4, // standard radius for miniature sphere
   flatWorldBounds: {
@@ -52,7 +52,224 @@ export const CANONICAL_WORLD: WorldDefinition = {
   ],
 
   buildings: [
-    // --- DISTRICT 1: TOWN CENTER & MARKET PLAZA ---
+    // =========================================================================
+    // THE SIX PRIMARY FUNCTIONAL DESTINATIONS (Prompt 05 Core Requirement)
+    // =========================================================================
+
+    // 1. Little House — About Me
+    {
+      id: 'building-little-house',
+      name: 'The Little House — About Me',
+      type: 'little-house',
+      category: 'residential',
+      destinationRole: 'about',
+      assetKey: 'mesh-little-house',
+      description: 'A welcoming home introducing Shiv Kumar, his personal background, passions, and engineering journey.',
+      coordinates: { lat: 28, lon: 2, altitude: 0, flatX: 0, flatZ: 12 },
+      rotationY: 180,
+      scale: 1.05,
+      visualTheme: {
+        wallColor: '#faedcd',
+        roofColor: '#d66d58',
+        trimColor: '#5c3a21',
+        accentColor: '#f4a261',
+        windowGlowColor: '#ffe57f',
+      },
+      metadata: {
+        storySnippet: 'Home to software engineer Shiv Kumar. Welcome inside!',
+        residentOrPurpose: 'Shiv Kumar (About Me)',
+        milestoneIntroduced: 3,
+        interactionTargetId: 'about',
+        amenities: ['Personal Journal', 'Philosophy Board', 'Reading Armchair'],
+        tags: ['Primary Destination', 'About Me', 'Core'],
+      },
+      rendering: {
+        lodLevel: 'high',
+        castShadow: true,
+        receiveShadow: true,
+        hasWindowGlow: true,
+      },
+    },
+
+    // 2. University — Education (Techno India University)
+    {
+      id: 'building-university',
+      name: 'University Hall — Education',
+      type: 'university',
+      category: 'scholarly',
+      destinationRole: 'education',
+      assetKey: 'mesh-university',
+      description: 'Techno India University — B.Tech Computer Science and Engineering, Specialization: Cloud Computing.',
+      coordinates: { lat: 30, lon: -42, altitude: 0.02, flatX: -18, flatZ: -6 },
+      rotationY: 85,
+      scale: 1.15,
+      visualTheme: {
+        wallColor: '#f7efe1',
+        roofColor: '#2a9d8f',
+        trimColor: '#1d3557',
+        accentColor: '#e9c46a',
+        windowGlowColor: '#ffe57f',
+      },
+      metadata: {
+        storySnippet: 'Techno India University: Academic rigor in Computer Science & Cloud Computing.',
+        residentOrPurpose: 'Prof. Orion & Faculty',
+        milestoneIntroduced: 3,
+        interactionTargetId: 'education',
+        amenities: ['Lecture Auditorium', 'Cloud Computing Lab', 'Curriculum Archive'],
+        tags: ['Primary Destination', 'Education', 'Core'],
+      },
+      rendering: {
+        lodLevel: 'high',
+        castShadow: true,
+        receiveShadow: true,
+        hasWindowGlow: true,
+      },
+    },
+
+    // 3. Workshop — Experience (Practical Systems & Craft)
+    {
+      id: 'building-workshop',
+      name: 'The Workshop — Practical Engineering',
+      type: 'workshop',
+      category: 'craft',
+      destinationRole: 'experience',
+      assetKey: 'mesh-workshop',
+      description: 'Practical engineering experience: independent systems development, open source, and architectural craft.',
+      coordinates: { lat: 26, lon: 86, altitude: 0, flatX: 16, flatZ: 6 },
+      rotationY: -80,
+      scale: 1.08,
+      visualTheme: {
+        wallColor: '#e8dbce',
+        roofColor: '#b05d3b',
+        trimColor: '#4a3b32',
+        accentColor: '#f4a261',
+        windowGlowColor: '#f4a261',
+      },
+      metadata: {
+        storySnippet: 'Where code is forged with care. Practical engineering, microservices, and telemetry.',
+        residentOrPurpose: 'Master Tinkerer & Engineering Guild',
+        milestoneIntroduced: 3,
+        interactionTargetId: 'experience',
+        amenities: ['Testing Harness', 'Architecture Drafting Table', 'Build Pipeline'],
+        tags: ['Primary Destination', 'Experience', 'Core'],
+      },
+      rendering: {
+        lodLevel: 'high',
+        castShadow: true,
+        receiveShadow: true,
+        hasWindowGlow: true,
+      },
+    },
+
+    // 4. Invention House — Projects (Shadow Exchange, ASTRA, Faultline, ForgeFit, VEENA)
+    {
+      id: 'building-invention-house',
+      name: 'Invention House — Projects',
+      type: 'invention-house',
+      category: 'landmark',
+      destinationRole: 'projects',
+      assetKey: 'mesh-invention-house',
+      description: 'Interactive showcase of 5 core projects: Shadow Exchange, ASTRA, Faultline, ForgeFit, and VEENA.',
+      coordinates: { lat: 18, lon: 104, altitude: 0.02, flatX: 20, flatZ: -8 },
+      rotationY: -110,
+      scale: 1.12,
+      visualTheme: {
+        wallColor: '#ede0d4',
+        roofColor: '#588157',
+        trimColor: '#7b2cbf',
+        accentColor: '#ffd166',
+        windowGlowColor: '#a0e7e5',
+      },
+      metadata: {
+        storySnippet: 'Discover 5 original engineering projects across P2P crypto, telemetry, chaos engineering, and audio DSP.',
+        residentOrPurpose: 'Inventor Labs (Shiv Kumar Projects)',
+        milestoneIntroduced: 3,
+        interactionTargetId: 'projects',
+        amenities: ['Project Display Pedestals', 'Telemetry Terminal', 'Audio Resonator'],
+        tags: ['Primary Destination', 'Projects', 'Core'],
+      },
+      rendering: {
+        lodLevel: 'high',
+        castShadow: true,
+        receiveShadow: true,
+        hasWindowGlow: true,
+      },
+    },
+
+    // 5. Library — Skills & Technical Knowledge
+    {
+      id: 'building-library',
+      name: 'The Grand Library — Skills & Knowledge',
+      type: 'library',
+      category: 'civic',
+      destinationRole: 'skills',
+      assetKey: 'mesh-library',
+      description: 'Comprehensive technical skills organized into Cloud, Systems, WebGL/Frontend, and Methodologies.',
+      coordinates: { lat: -14, lon: 30, altitude: 0, flatX: -14, flatZ: 15 },
+      rotationY: -35,
+      scale: 1.14,
+      visualTheme: {
+        wallColor: '#dedbd2',
+        roofColor: '#3a5a40',
+        trimColor: '#344e41',
+        accentColor: '#f4a261',
+        windowGlowColor: '#ffeaa7',
+      },
+      metadata: {
+        storySnippet: 'Scrolls of technical knowledge: AWS, Kubernetes, Docker, Go, TypeScript, Three.js, and TDD.',
+        residentOrPurpose: 'Archivist Scribe (Skills Directory)',
+        milestoneIntroduced: 3,
+        interactionTargetId: 'skills',
+        amenities: ['Cloud Architecture Tomes', 'Language Reference Stacks', 'Methodology Scrolls'],
+        tags: ['Primary Destination', 'Skills', 'Core'],
+      },
+      rendering: {
+        lodLevel: 'high',
+        castShadow: true,
+        receiveShadow: true,
+        hasWindowGlow: true,
+      },
+    },
+
+    // 6. Post Office — Contact
+    {
+      id: 'building-post-office',
+      name: 'The Post Office — Contact',
+      type: 'post-office',
+      category: 'commercial',
+      destinationRole: 'contact',
+      assetKey: 'mesh-post-office',
+      description: 'Direct communication channels: Email, GitHub, LinkedIn, and Résumé.',
+      coordinates: { lat: -32, lon: 8, altitude: 0, flatX: 4, flatZ: -16 },
+      rotationY: 10,
+      scale: 1.05,
+      visualTheme: {
+        wallColor: '#faedcd',
+        roofColor: '#d62828',
+        trimColor: '#5c3a21',
+        accentColor: '#f4a261',
+        windowGlowColor: '#ffe57f',
+      },
+      metadata: {
+        storySnippet: 'Send a message, review GitHub repositories, or connect on LinkedIn.',
+        residentOrPurpose: 'Postmaster Jasper (Contact Desk)',
+        milestoneIntroduced: 3,
+        interactionTargetId: 'contact',
+        amenities: ['Postal Counter', 'Telegraph Key', 'Direct Mailbox'],
+        tags: ['Primary Destination', 'Contact', 'Core'],
+      },
+      rendering: {
+        lodLevel: 'high',
+        castShadow: true,
+        receiveShadow: true,
+        hasWindowGlow: true,
+      },
+    },
+
+    // =========================================================================
+    // DECORATIVE LANDMARK & SCENERY BUILDINGS (Populated Storybook Village)
+    // =========================================================================
+
     {
       id: 'building-town-hall',
       name: 'The Grand Town Hall & Clocktower',
@@ -64,10 +281,10 @@ export const CANONICAL_WORLD: WorldDefinition = {
       rotationY: 15,
       scale: 1.2,
       visualTheme: {
-        wallColor: '#f7efe1', // alabaster cream
-        roofColor: '#d66d58', // warm terracotta coral
-        trimColor: '#5c3a21', // deep timber
-        accentColor: '#f4a261', // brass clock & finial
+        wallColor: '#f7efe1',
+        roofColor: '#d66d58',
+        trimColor: '#5c3a21',
+        accentColor: '#f4a261',
         windowGlowColor: '#ffe57f',
       },
       metadata: {
@@ -85,6 +302,7 @@ export const CANONICAL_WORLD: WorldDefinition = {
         hasWindowGlow: true,
       },
     },
+
     {
       id: 'building-bakery',
       name: 'Cinnamon Hearth Bakery',
@@ -92,12 +310,12 @@ export const CANONICAL_WORLD: WorldDefinition = {
       category: 'commercial',
       assetKey: 'mesh-bakery-hearth',
       description: 'A cozy timber bakery where warm cardamom buns and sourdough loaves are baked fresh daily.',
-      coordinates: { lat: 14, lon: -38, altitude: 0, flatX: -12, flatZ: 8 },
+      coordinates: { lat: 14, lon: -38, altitude: 0, flatX: -11, flatZ: 6 },
       rotationY: 30,
       scale: 0.98,
       visualTheme: {
-        wallColor: '#faedcd', // butter cream
-        roofColor: '#bf573f', // toasted terracotta
+        wallColor: '#faedcd',
+        roofColor: '#bf573f',
         trimColor: '#6f4e37',
         accentColor: '#e9c46a',
         windowGlowColor: '#ffba49',
@@ -116,6 +334,7 @@ export const CANONICAL_WORLD: WorldDefinition = {
         hasWindowGlow: true,
       },
     },
+
     {
       id: 'building-weaver-house',
       name: "The Weaver's Guildhouse",
@@ -123,12 +342,12 @@ export const CANONICAL_WORLD: WorldDefinition = {
       category: 'residential',
       assetKey: 'mesh-weaver-house',
       description: 'A handsome timber-frame home with steep slate gables and woven botanical tapestries.',
-      coordinates: { lat: 18, lon: -12, altitude: 0, flatX: -6, flatZ: 4 },
+      coordinates: { lat: 18, lon: -12, altitude: 0, flatX: -6, flatZ: 3 },
       rotationY: -10,
       scale: 0.95,
       visualTheme: {
         wallColor: '#f4ede2',
-        roofColor: '#5c677d', // slate grey-blue
+        roofColor: '#5c677d',
         trimColor: '#473322',
         accentColor: '#e76f51',
         windowGlowColor: '#ffe8a1',
@@ -148,30 +367,29 @@ export const CANONICAL_WORLD: WorldDefinition = {
       },
     },
 
-    // --- DISTRICT 2: MEADOW MILL & ALLOTMENTS ---
     {
       id: 'building-windmill',
-      name: 'Whispering Hill Windmill',
+      name: 'High Meadow Windmill',
       type: 'windmill',
       category: 'agriculture',
-      assetKey: 'mesh-windmill-hill',
-      description: 'Perched upon a breezy knoll, with four rotating canvas blades grinding golden grain.',
-      coordinates: { lat: 42, lon: 114, altitude: 0.12, flatX: 18, flatZ: 14 },
+      assetKey: 'mesh-windmill-timber',
+      description: 'A round stone windmill perched high on Meadow Ridge with four slatted timber sails catching the valley wind.',
+      coordinates: { lat: 42, lon: 115, altitude: 0.18, flatX: 18, flatZ: 14 },
       rotationY: -45,
-      scale: 1.08,
+      scale: 1.1,
       visualTheme: {
-        wallColor: '#e9ecef', // chalk white stone
-        roofColor: '#4f7d6a', // moss pine green
-        trimColor: '#4a3525',
+        wallColor: '#e9d8a6',
+        roofColor: '#9c6644',
+        trimColor: '#6f4e37',
         accentColor: '#f4a261',
-        windowGlowColor: '#ffe599',
+        windowGlowColor: '#ffba49',
       },
       metadata: {
-        storySnippet: 'The turning sails hum a gentle, hypnotic lullaby with every northern breeze.',
-        residentOrPurpose: 'The Miller & Meadow Watcher',
+        storySnippet: 'Its steady four-blade sails turn gently with every passing valley breeze.',
+        residentOrPurpose: 'Miller Jonathan',
         milestoneIntroduced: 1,
-        amenities: ['Millstones', 'Flour Sacks', 'Weather Cock'],
-        tags: ['Agriculture', 'Kinetic', 'Landmark'],
+        amenities: ['Grain Silo', 'Wind Vane', 'Grindstone Chamber'],
+        tags: ['Windmill', 'Foliage', 'Skyline'],
       },
       rendering: {
         lodLevel: 'high',
@@ -180,28 +398,29 @@ export const CANONICAL_WORLD: WorldDefinition = {
         hasWindowGlow: true,
       },
     },
+
     {
       id: 'building-cottage-gardener',
-      name: "The Herbalist's Cottage",
+      name: "The Gardener's Thatched Cottage",
       type: 'cottage-gardener',
       category: 'residential',
       assetKey: 'mesh-cottage-gardener',
-      description: 'A storybook timber cottage with floral window planters and drying lavender bundles.',
-      coordinates: { lat: 32, lon: 92, altitude: 0.05, flatX: 14, flatZ: 6 },
-      rotationY: 70,
+      description: 'A sunlit cottage with an organic rounded thatched roof and flourishing climbing honeysuckle.',
+      coordinates: { lat: 34, lon: 95, altitude: 0.05, flatX: 12, flatZ: 11 },
+      rotationY: 45,
       scale: 0.92,
       visualTheme: {
-        wallColor: '#fff1e6', // blush peach
-        roofColor: '#6d597a', // dusty plum slate
-        trimColor: '#355070',
-        windowGlowColor: '#ffd89b',
+        wallColor: '#faedcd',
+        roofColor: '#cb997e',
+        trimColor: '#5c3a21',
+        windowGlowColor: '#ffe57f',
       },
       metadata: {
-        storySnippet: 'Drying mint, chamomile, and elderberry infuse the parlor with soothing warmth.',
-        residentOrPurpose: 'Botanist Flora',
+        storySnippet: 'Surrounded by thriving lavender beds, chamomile herbs, and apple trees.',
+        residentOrPurpose: 'Flora the Herbalist',
         milestoneIntroduced: 2,
-        amenities: ['Herb Garden', 'Potting Shed', 'Flower Trellis'],
-        tags: ['Residential', 'Botanical'],
+        amenities: ['Seed Drying Shed', 'Herb Press', 'Window Planters'],
+        tags: ['Garden', 'Flora', 'Cottage'],
       },
       rendering: {
         lodLevel: 'medium',
@@ -211,30 +430,29 @@ export const CANONICAL_WORLD: WorldDefinition = {
       },
     },
 
-    // --- DISTRICT 3: HARBOR & AZURE LAGOON ---
     {
       id: 'building-lighthouse',
-      name: 'Beacon Lookout & Pier',
+      name: 'Beacon Point Lighthouse',
       type: 'lighthouse',
-      category: 'coastal',
+      category: 'landmark',
       assetKey: 'mesh-lighthouse-beacon',
-      description: 'A round stone tower with red and cream storybook bands and a warm pulsing beacon light.',
-      coordinates: { lat: -48, lon: -12, altitude: 0.1, flatX: -4, flatZ: -28 },
-      rotationY: 140,
-      scale: 1.1,
+      description: 'A tall coastal stone lighthouse standing guard over the azure lagoon and distant reefs.',
+      coordinates: { lat: -48, lon: -12, altitude: 0.08, flatX: -2, flatZ: -28 },
+      rotationY: 20,
+      scale: 1.15,
       visualTheme: {
-        wallColor: '#f8f9fa',
-        roofColor: '#e63946', // storybook red band
-        trimColor: '#1d3557', // navy trim
-        accentColor: '#f1faee',
+        wallColor: '#ffffff',
+        roofColor: '#b7094c',
+        trimColor: '#001219',
+        accentColor: '#ffea75',
         windowGlowColor: '#fff3b0',
       },
       metadata: {
-        storySnippet: 'Its beacon guides fireflies and nighttime voyagers safely past the reefs.',
-        residentOrPurpose: 'Keeper Sam',
+        storySnippet: 'A faithful revolving beacon cutting through sea mist and guiding night travelers.',
+        residentOrPurpose: 'Keeper Silas & Harbor Watch',
         milestoneIntroduced: 1,
-        amenities: ['Beacon Lamp', 'Lookout Balcony', 'Signal Bell'],
-        tags: ['Coastal', 'Light', 'Navigation'],
+        amenities: ['Fresnel Lantern', 'Fog Horn', 'Signal Gallery'],
+        tags: ['Harbor', 'Coast', 'Beacon'],
       },
       rendering: {
         lodLevel: 'high',
@@ -243,6 +461,7 @@ export const CANONICAL_WORLD: WorldDefinition = {
         hasWindowGlow: true,
       },
     },
+
     {
       id: 'building-cottage-fisherman',
       name: "The Fisherman's Boathouse",
@@ -255,7 +474,7 @@ export const CANONICAL_WORLD: WorldDefinition = {
       scale: 0.9,
       visualTheme: {
         wallColor: '#dedbd2',
-        roofColor: '#52796f', // seafoam slate
+        roofColor: '#52796f',
         trimColor: '#2f3e46',
         windowGlowColor: '#ffeaa7',
       },
@@ -274,7 +493,6 @@ export const CANONICAL_WORLD: WorldDefinition = {
       },
     },
 
-    // --- DISTRICT 4: STARGAZER BLUFFS & TEA SANCTUARIES ---
     {
       id: 'building-observatory',
       name: 'Stargazer Dome & Observatory',
@@ -286,8 +504,8 @@ export const CANONICAL_WORLD: WorldDefinition = {
       rotationY: 70,
       scale: 1.05,
       visualTheme: {
-        wallColor: '#dedbd2', // weathered light stone
-        roofColor: '#588157', // copper patina
+        wallColor: '#dedbd2',
+        roofColor: '#588157',
         trimColor: '#3a5a40',
         accentColor: '#ffd166',
         windowGlowColor: '#a0e7e5',
@@ -306,28 +524,30 @@ export const CANONICAL_WORLD: WorldDefinition = {
         hasWindowGlow: true,
       },
     },
+
     {
       id: 'building-tea-house',
       name: 'Cloudcrest Tea Pavilion',
       type: 'tea-house',
-      category: 'commercial',
+      category: 'sanctuary',
       assetKey: 'mesh-tea-pavilion',
-      description: 'An open-air timber gazebo with curved tiered eaves overlooking misty mountain slopes.',
-      coordinates: { lat: 34, lon: -164, altitude: 0.08, flatX: -26, flatZ: 20 },
-      rotationY: -15,
-      scale: 0.92,
+      description: 'A tranquil open timber pavilion with gently curved pagoda eaves, surrounded by pink blossom petals.',
+      coordinates: { lat: 34, lon: -160, altitude: 0.12, flatX: -25, flatZ: 20 },
+      rotationY: -25,
+      scale: 0.95,
       visualTheme: {
-        wallColor: '#d4a373', // natural timber
-        roofColor: '#b56576', // blossom rose
-        trimColor: '#6f1d1b',
-        windowGlowColor: '#ffe3a8',
+        wallColor: '#faedcd',
+        roofColor: '#9d0208',
+        trimColor: '#370617',
+        accentColor: '#ffba08',
+        windowGlowColor: '#ffea75',
       },
       metadata: {
-        storySnippet: 'Warm matcha and quiet contemplation as evening mist rolls over the ridge.',
-        residentOrPurpose: 'Tea Master Ren',
-        milestoneIntroduced: 1,
-        amenities: ['Tea Deck', 'Stone Hearth', 'Tatami Terrace'],
-        tags: ['Peaceful', 'Scenic'],
+        storySnippet: 'Steam curls gracefully from iron kettles over glowing cherry charcoal.',
+        residentOrPurpose: 'Master Oolong & Village Guests',
+        milestoneIntroduced: 2,
+        amenities: ['Tea Hearth', 'Blossom Viewing Deck', 'Wind Chimes'],
+        tags: ['Tea', 'Zen', 'Pagoda'],
       },
       rendering: {
         lodLevel: 'medium',
@@ -336,28 +556,30 @@ export const CANONICAL_WORLD: WorldDefinition = {
         hasWindowGlow: true,
       },
     },
+
     {
       id: 'building-greenhouse',
-      name: 'Sunlit Botanical Orangery',
+      name: 'Botanical Orangery & Fernhouse',
       type: 'greenhouse',
       category: 'landmark',
-      assetKey: 'mesh-greenhouse-orangery',
-      description: 'A light-filled solarium of arched timber frames and semi-opaque glass panes conserving rare flora.',
-      coordinates: { lat: -32, lon: 110, altitude: 0.06, flatX: 22, flatZ: -20 },
-      rotationY: -40,
-      scale: 0.95,
+      assetKey: 'mesh-greenhouse-glass',
+      description: 'A Victorian-style curved glass solarium conserving exotic alpine mosses, ferns, and citrus trees.',
+      coordinates: { lat: -32, lon: 110, altitude: 0.08, flatX: 22, flatZ: -20 },
+      rotationY: -55,
+      scale: 1.05,
       visualTheme: {
-        wallColor: '#fdf0d5',
-        roofColor: '#8ecae6', // glass tint
-        trimColor: '#2b580c',
-        windowGlowColor: '#caffbf',
+        wallColor: '#f7ede2',
+        roofColor: '#2a9d8f',
+        trimColor: '#1b4332',
+        accentColor: '#e76f51',
+        windowGlowColor: '#a7c957',
       },
       metadata: {
-        storySnippet: 'Hummingbirds and exotic night-blooming orchids thrive in its year-round spring warmth.',
-        residentOrPurpose: 'Horticultural Conservatory',
-        milestoneIntroduced: 1,
-        amenities: ['Orchid Nursery', 'Fern Bench', 'Glass Solarium'],
-        tags: ['Botanical', 'Glass', 'Lush'],
+        storySnippet: 'Translucent glass arches warm year-round blooms from tropical climes.',
+        residentOrPurpose: 'Botanist Rowan',
+        milestoneIntroduced: 2,
+        amenities: ['Exotic Fern Collection', 'Glass Solarium', 'Water Lily Cistern'],
+        tags: ['Glasshouse', 'Flora', 'Nature'],
       },
       rendering: {
         lodLevel: 'high',
@@ -366,28 +588,29 @@ export const CANONICAL_WORLD: WorldDefinition = {
         hasWindowGlow: true,
       },
     },
+
     {
       id: 'building-cottage-bookbinder',
-      name: "The Scholar's Gable",
+      name: "The Bookbinder's Cottage",
       type: 'cottage-bookbinder',
       category: 'residential',
       assetKey: 'mesh-cottage-bookbinder',
-      description: 'A cozy two-story cottage with dormer windows, towering bookshelves, and leatherbound archives.',
-      coordinates: { lat: -16, lon: 42, altitude: 0.03, flatX: 10, flatZ: -10 },
-      rotationY: -115,
-      scale: 0.92,
+      description: 'A cozy steep-gabled cottage with leaded diamond-pane windows and parchment press.',
+      coordinates: { lat: 46, lon: -140, altitude: 0.1, flatX: -26, flatZ: 10 },
+      rotationY: 15,
+      scale: 0.9,
       visualTheme: {
-        wallColor: '#fcf6bd',
-        roofColor: '#b7b7a4', // slate shingle
-        trimColor: '#4a4e69',
-        windowGlowColor: '#ffd166',
+        wallColor: '#ede0d4',
+        roofColor: '#7f5539',
+        trimColor: '#4a3b32',
+        windowGlowColor: '#ffe57f',
       },
       metadata: {
-        storySnippet: 'Home to the village chronicler who records memories and local folklore.',
-        residentOrPurpose: 'Archivist Corin',
+        storySnippet: 'Shelves bowed under marbled leather bindings, inkwells, and field maps.',
+        residentOrPurpose: 'Elias the Chronicler',
         milestoneIntroduced: 2,
-        amenities: ['Library Dormer', 'Press Table', 'Ink Bench'],
-        tags: ['Books', 'History'],
+        amenities: ['Parchment Press', 'Binding Bench', 'Map Library'],
+        tags: ['Books', 'Cozy', 'Craft'],
       },
       rendering: {
         lodLevel: 'medium',
@@ -398,22 +621,93 @@ export const CANONICAL_WORLD: WorldDefinition = {
     },
   ],
 
+  // =========================================================================
+  // CHARMING NPC GUIDES (Prompt 05 Core Requirement)
+  // =========================================================================
+  npcs: [
+    {
+      id: 'npc-mayor',
+      name: 'Mayor Ren',
+      role: 'Village Guide',
+      coordinates: { lat: 20, lon: 10, flatX: 1.5, flatZ: -2 },
+      rotationY: 180,
+      guidedDestination: 'about',
+      dialogue: [
+        'Welcome to Somewhere Village! I am Mayor Ren.',
+        'Take your time walking our cobblestone paths—the Little House is just up north!',
+        'You can use WASD, Arrow keys, or click anywhere on the grass to explore.',
+      ],
+      visualTheme: { jacketColor: '#d66d58', hatColor: '#5c3a21', pantsColor: '#2f3e46' },
+    },
+    {
+      id: 'npc-professor',
+      name: 'Professor Orion',
+      role: 'Dean of Cloud Computing',
+      coordinates: { lat: 28, lon: -38, flatX: -16, flatZ: -4 },
+      rotationY: 110,
+      guidedDestination: 'education',
+      dialogue: [
+        'Greetings scholar! Techno India University stands right here.',
+        'Here we study distributed computing, virtualization, and systems algorithms.',
+        'Step up to the University portico to review Shiv’s academic curriculum!',
+      ],
+      visualTheme: { jacketColor: '#2a9d8f', hatColor: '#1d3557', pantsColor: '#457b9d' },
+    },
+    {
+      id: 'npc-tinkerer',
+      name: 'Master Tinkerer',
+      role: 'Systems Craftsman',
+      coordinates: { lat: 24, lon: 82, flatX: 14, flatZ: 4.5 },
+      rotationY: -60,
+      guidedDestination: 'experience',
+      dialogue: [
+        'Welcome to the Workshop! No fake corporate titles here—just genuine systems craft.',
+        'We build telemetry daemons, chaos engineering tools, and real-time audio synthesizers.',
+        'The Invention House next door showcases 5 full engineering projects!',
+      ],
+      visualTheme: { jacketColor: '#e9c46a', hatColor: '#6f4e37', pantsColor: '#3d312a' },
+    },
+    {
+      id: 'npc-archivist',
+      name: 'Archivist Scribe',
+      role: 'Keeper of Knowledge',
+      coordinates: { lat: -12, lon: 28, flatX: -12, flatZ: 13.5 },
+      rotationY: 35,
+      guidedDestination: 'skills',
+      dialogue: [
+        'Welcome to the Library! Inside you will find categorized scrolls of technical knowledge.',
+        'From AWS, Docker, and Kubernetes to Go, TypeScript, and Three.js WebGL graphics.',
+      ],
+      visualTheme: { jacketColor: '#7b2cbf', hatColor: '#3c096c', pantsColor: '#240046' },
+    },
+    {
+      id: 'npc-postmaster',
+      name: 'Postmaster Jasper',
+      role: 'Village Courier',
+      coordinates: { lat: -30, lon: 8, flatX: 3, flatZ: -14 },
+      rotationY: 15,
+      guidedDestination: 'contact',
+      dialogue: [
+        'Letters, telegrams, and code repositories! The Post Office is open for contact.',
+        'You can reach Shiv directly via email, GitHub, or LinkedIn.',
+        'Click the Post Office or press [E] to view full contact channels!',
+      ],
+      visualTheme: { jacketColor: '#e76f51', hatColor: '#d62828', pantsColor: '#1f2421' },
+    },
+  ],
+
   terrainFeatures: [
-    // Hills and Ridges
     { id: 'hill-windmill', name: 'Windmill Ridge', type: 'hill', coordinates: { lat: 43, lon: 112, flatX: 19, flatZ: 14 }, radius: 1.55, height: 0.42, color: '#8cb33e' },
     { id: 'hill-observatory', name: 'Stargazer Peak', type: 'ridge', coordinates: { lat: 54, lon: -112, flatX: -21, flatZ: -15 }, radius: 1.45, height: 0.38, color: '#7ba035' },
     { id: 'hill-tea-knoll', name: 'Cloudcrest Knoll', type: 'hill', coordinates: { lat: 32, lon: -162, flatX: -25, flatZ: 19 }, radius: 1.25, height: 0.3, color: '#8cb33e' },
     { id: 'hill-orangery', name: 'Fern Slope', type: 'hill', coordinates: { lat: -34, lon: 106, flatX: 21, flatZ: -22 }, radius: 1.35, height: 0.26, color: '#97be44' },
     { id: 'hill-south-pasture', name: 'South Orchard Pasture', type: 'hill', coordinates: { lat: -56, lon: 66, flatX: 16, flatZ: -36 }, radius: 1.6, height: 0.32, color: '#83a838' },
     { id: 'hill-east-bluff', name: 'Sunrise Bluff', type: 'hill', coordinates: { lat: 10, lon: 142, flatX: 28, flatZ: 6 }, radius: 1.35, height: 0.28, color: '#8cb33e' },
-
-    // Water bodies
     { id: 'water-whispering-pond', name: 'Whispering Pond', type: 'pond', coordinates: { lat: -25, lon: -55, flatX: -13, flatZ: -16 }, radius: 1.2, color: '#38bdf8' },
     { id: 'water-beacon-lagoon', name: 'Azure Beacon Lagoon', type: 'lagoon', coordinates: { lat: -45, lon: -20, flatX: -6, flatZ: -26 }, radius: 1.1, color: '#0ea5e9' },
   ],
 
   paths: [
-    // Connected Highway: High Street to Windmill
     {
       id: 'path-high-street',
       name: 'Cobblestone High Street',
@@ -426,7 +720,6 @@ export const CANONICAL_WORLD: WorldDefinition = {
         { lat: 14, lon: -35, flatX: -11, flatZ: 7 },
       ],
     },
-    // High Street to Windmill Ridge
     {
       id: 'path-windmill-ridge',
       name: 'Mill Ridge Walk',
@@ -440,7 +733,6 @@ export const CANONICAL_WORLD: WorldDefinition = {
         { lat: 41, lon: 112, flatX: 18, flatZ: 14 },
       ],
     },
-    // Town Square down to Harbor Pier
     {
       id: 'path-harbor-ramble',
       name: 'Harbor Descent',
@@ -455,7 +747,6 @@ export const CANONICAL_WORLD: WorldDefinition = {
         { lat: -44, lon: -8, flatX: -2, flatZ: -27 },
       ],
     },
-    // Lakeside Meadow Run to Angler's Pier
     {
       id: 'path-lake-run',
       name: 'Cloverfold Bank Trail',
@@ -468,7 +759,6 @@ export const CANONICAL_WORLD: WorldDefinition = {
         { lat: -25, lon: -54, flatX: -14, flatZ: -15 },
       ],
     },
-    // Mountain Path up to Observatory
     {
       id: 'path-stargazer-ascent',
       name: 'Stargazer Switchback',

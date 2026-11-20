@@ -1,10 +1,9 @@
-import React, { useEffect, useMemo } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
+import React, { useEffect, useMemo, useRef } from 'react';
+import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { AtmospherePhaseConfig } from '../../config/atmosphereConfig';
-import { WorldDefinition, BuildingItem } from '../../world/types';
+import { WorldDefinition, BuildingItem, NPCEntity } from '../../world/types';
 import { SkyAndAtmosphere } from './SkyAndAtmosphere';
 import { MiniaturePlanet } from './MiniaturePlanet';
 import { WalkableWorldRenderer } from '../../world/WalkableWorldRenderer';
@@ -17,40 +16,64 @@ interface SceneCanvasProps {
   isEntering: boolean;
   isEntered: boolean;
   viewMode?: ViewMode;
+  playerPosition: [number, number, number];
+  playerRotation: number;
+  isWalking: boolean;
+  targetPoint: [number, number, number] | null;
+  onGroundClick?: (x: number, z: number) => void;
   onHoverBuilding?: (building: BuildingItem | null) => void;
   onSelectBuilding?: (building: BuildingItem) => void;
+  onSelectNPC?: (npc: NPCEntity) => void;
 }
 
 /**
- * Camera Animator handles responsive framing across ALL aspect ratios:
- * - Desktop/widescreen: comfortable orbit distance with generous breathing room
- * - Tablets & phones: dynamic distance scaling so planet diameter (8.8) is never cropped
- * - Short landscape: adapted elevation and lookAt target
+ * Third-Person Camera Follow Controller
+ * Smoothly follows player position and lookAt during walkable town exploration.
  */
-const CameraController: React.FC<{
+const ThirdPersonFollowCamera: React.FC<{
+  playerPosition: [number, number, number];
+  isEntered: boolean;
+}> = ({ playerPosition, isEntered }) => {
+  const { camera } = useThree();
+  const currentLookAt = useRef(new THREE.Vector3(0, 1.2, 0));
+
+  useFrame((_, delta) => {
+    if (!isEntered) return;
+    // Follow camera offset: 4.8 units above, 7.8 units behind
+    const targetCamX = playerPosition[0];
+    const targetCamY = playerPosition[1] + 4.8;
+    const targetCamZ = playerPosition[2] + 7.8;
+
+    camera.position.x = THREE.MathUtils.damp(camera.position.x, targetCamX, 5, delta);
+    camera.position.y = THREE.MathUtils.damp(camera.position.y, targetCamY, 5, delta);
+    camera.position.z = THREE.MathUtils.damp(camera.position.z, targetCamZ, 5, delta);
+
+    currentLookAt.current.x = THREE.MathUtils.damp(currentLookAt.current.x, playerPosition[0], 6, delta);
+    currentLookAt.current.y = THREE.MathUtils.damp(currentLookAt.current.y, playerPosition[1] + 1.2, 6, delta);
+    currentLookAt.current.z = THREE.MathUtils.damp(currentLookAt.current.z, playerPosition[2], 6, delta);
+
+    camera.lookAt(currentLookAt.current);
+  });
+
+  return null;
+};
+
+/**
+ * Camera Animator for Landing Planet Orbit
+ */
+const LandingCameraController: React.FC<{
   isEntering: boolean;
   isEntered: boolean;
-  viewMode: ViewMode;
-}> = ({ isEntering, isEntered, viewMode }) => {
+}> = ({ isEntering, isEntered }) => {
   const { camera, size } = useThree();
   const aspect = size.width / Math.max(1, size.height);
 
   const targets = useMemo(() => {
-    if (viewMode === 'walkable') {
-      // Walkable world overview camera
+    if (isEntering) {
+      // Swop-in towards town center
       return {
-        pos: new THREE.Vector3(0, 14, 26),
-        lookAt: new THREE.Vector3(0, 0, 0),
-      };
-    }
-
-    if (isEntering || isEntered) {
-      // Entered town close-up view
-      const z = aspect < 1.0 ? 8.2 * (1.1 / Math.max(0.48, aspect)) : 8.2;
-      const y = aspect < 1.0 ? 1.6 : 2.4;
-      return {
-        pos: new THREE.Vector3(0.4, y, z),
-        lookAt: new THREE.Vector3(0, 0.4, 0),
+        pos: new THREE.Vector3(0, 5.2, 9.2),
+        lookAt: new THREE.Vector3(0, 1.0, 0),
       };
     } else {
       // Planet orbit view with generous breathing room around edges
@@ -77,9 +100,11 @@ const CameraController: React.FC<{
         lookAt: new THREE.Vector3(0, lookAtY, 0),
       };
     }
-  }, [isEntering, isEntered, aspect, viewMode, size.height]);
+  }, [isEntering, aspect, size.height]);
 
   useEffect(() => {
+    if (isEntered) return;
+
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     if (prefersReducedMotion) {
@@ -90,8 +115,8 @@ const CameraController: React.FC<{
         x: targets.pos.x,
         y: targets.pos.y,
         z: targets.pos.z,
-        duration: isEntering || isEntered ? 2.0 : 1.5,
-        ease: isEntering || isEntered ? 'power3.inOut' : 'power2.out',
+        duration: isEntering ? 1.8 : 1.4,
+        ease: isEntering ? 'power3.inOut' : 'power2.out',
         onUpdate: () => {
           camera.lookAt(targets.lookAt);
         },
@@ -107,9 +132,14 @@ export const SceneCanvas: React.FC<SceneCanvasProps> = ({
   atmosphere,
   isEntering,
   isEntered,
-  viewMode = 'miniature',
+  playerPosition,
+  playerRotation,
+  isWalking,
+  targetPoint,
+  onGroundClick,
   onHoverBuilding,
   onSelectBuilding,
+  onSelectNPC,
 }) => {
   return (
     <div
@@ -137,45 +167,41 @@ export const SceneCanvas: React.FC<SceneCanvasProps> = ({
           gl.toneMappingExposure = 1.05;
         }}
       >
-        <CameraController isEntering={isEntering} isEntered={isEntered} viewMode={viewMode} />
-
-        {/* OrbitControls enabled ONLY in walkable exploration preview */}
-        {viewMode === 'walkable' && (
-          <OrbitControls
-            enablePan={true}
-            enableZoom={true}
-            minDistance={8}
-            maxDistance={50}
-            minPolarAngle={0.2}
-            maxPolarAngle={Math.PI / 2.2}
-            rotateSpeed={0.6}
-            dampingFactor={0.06}
-            enableDamping
-          />
+        {/* Camera controllers: Landing Orbit vs Third-Person Walkable Follow */}
+        {!isEntered ? (
+          <LandingCameraController isEntering={isEntering} isEntered={isEntered} />
+        ) : (
+          <ThirdPersonFollowCamera playerPosition={playerPosition} isEntered={isEntered} />
         )}
 
         {/* Dynamic Sky, Lights, Clouds, Birds, Stars */}
         <SkyAndAtmosphere atmosphere={atmosphere} />
 
         {/* CANONICAL RENDERING PATH SELECTION */}
-        {viewMode === 'miniature' ? (
-          /* Path 1: Miniature Spherical Island */
+        {!isEntered ? (
+          /* Path 1: Miniature Spherical Island (Landing Scene) */
           <MiniaturePlanet
             world={world}
             glowIntensity={atmosphere.windowGlowIntensity}
             lanternGlowIntensity={atmosphere.lanternGlowIntensity}
-            isEntering={isEntering || isEntered}
+            isEntering={isEntering}
             onHoverBuilding={onHoverBuilding}
             onSelectBuilding={onSelectBuilding}
           />
         ) : (
-          /* Path 2: Flat Walkable Ground World Preview */
+          /* Path 2: The Living Walkable Town (Explorable Scene) */
           <WalkableWorldRenderer
             world={world}
             glowIntensity={atmosphere.windowGlowIntensity}
             lanternGlowIntensity={atmosphere.lanternGlowIntensity}
+            playerPosition={playerPosition}
+            playerRotation={playerRotation}
+            isWalking={isWalking}
+            targetPoint={targetPoint}
+            onGroundClick={onGroundClick}
             onHoverBuilding={onHoverBuilding}
             onSelectBuilding={onSelectBuilding}
+            onSelectNPC={onSelectNPC}
           />
         )}
       </Canvas>

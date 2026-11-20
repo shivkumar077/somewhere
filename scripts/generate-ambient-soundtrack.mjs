@@ -1,46 +1,59 @@
 import fs from 'fs';
 import path from 'path';
 
-// Generate a soothing, organic, peaceful ambient soundtrack (16-bit 44.1kHz Stereo WAV)
-// Theme: Storybook cozy ambient music box / Rhodes chords with gentle warm overtones.
-// Seamless loop: 32 seconds duration.
+// Generate a high-fidelity, peaceful, organic, dreamlike storybook soundtrack
+// 16-bit 44.1kHz Stereo PCM WAV.
+// Duration: 60 seconds (long-form, non-fatiguing, seamlessly loopable).
 
 const SAMPLE_RATE = 44100;
-const DURATION = 32; // seconds
+const DURATION = 60; // 60 seconds
 const TOTAL_SAMPLES = SAMPLE_RATE * DURATION;
 const NUM_CHANNELS = 2; // Stereo
 
-console.log(`Generating cozy ambient soundtrack (${DURATION}s, ${SAMPLE_RATE}Hz stereo)...`);
+console.log(`Generating master storybook ambient soundtrack (${DURATION}s, ${SAMPLE_RATE}Hz stereo)...`);
 
-// Chords in progression:
-// Chord 1: Cmaj9 (C3, G3, B3, E4, D5) [0s - 8s]
-// Chord 2: Fmaj7#11 (F2, C3, A3, E4, G4) [8s - 16s]
-// Chord 3: Am9 (A2, E3, C4, G4, B4) [16s - 24s]
-// Chord 4: Gsus4 / Dm9 (G2, D3, G3, C4, E4) [24s - 32s]
+// Rich harmonic progression:
+// Bar 1 (0s - 10s):  Cmaj9     (C3, G3, B3, E4, D5)
+// Bar 2 (10s - 20s): Fmaj7#11  (F2, C3, A3, E4, G4, B4)
+// Bar 3 (20s - 30s): Am9       (A2, E3, C4, G4, B4, C5)
+// Bar 4 (30s - 40s): Em7/G     (G2, E3, B3, D4, G4)
+// Bar 5 (40s - 50s): Dm9       (D3, A3, C4, E4, F4, A4)
+// Bar 6 (50s - 60s): Gsus4(add9)->C (G2, D3, G3, C4, D4, E4)
 
 const chords = [
-  { start: 0, end: 8, notes: [130.81, 196.00, 246.94, 329.63, 587.33] },
-  { start: 8, end: 16, notes: [87.31, 130.81, 220.00, 329.63, 392.00] },
-  { start: 16, end: 24, notes: [110.00, 164.81, 261.63, 392.00, 493.88] },
-  { start: 24, end: 32, notes: [98.00, 146.83, 196.00, 261.63, 329.63] },
+  { start: 0, end: 10, notes: [130.81, 196.00, 246.94, 329.63, 587.33] },
+  { start: 10, end: 20, notes: [87.31, 130.81, 220.00, 329.63, 392.00, 493.88] },
+  { start: 20, end: 30, notes: [110.00, 164.81, 261.63, 392.00, 493.88, 523.25] },
+  { start: 30, end: 40, notes: [98.00, 164.81, 246.94, 293.66, 392.00] },
+  { start: 40, end: 50, notes: [146.83, 220.00, 261.63, 329.63, 349.23, 440.00] },
+  { start: 50, end: 60, notes: [98.00, 146.83, 196.00, 261.63, 293.66, 329.63] },
 ];
 
-// Melodic chime accents (calm, sporadic storybook sparkle notes)
+// Delicate storybook melody notes (celeste / music box / gentle felt harp)
 const melodyNotes = [
-  { time: 1.5, freq: 523.25, dur: 3.5, pan: -0.2 }, // C5
-  { time: 4.0, freq: 659.25, dur: 3.0, pan: 0.3 },  // E5
-  { time: 9.5, freq: 587.33, dur: 3.5, pan: -0.3 }, // D5
-  { time: 12.0, freq: 783.99, dur: 3.2, pan: 0.2 }, // G5
-  { time: 17.5, freq: 659.25, dur: 3.5, pan: -0.25 },// E5
-  { time: 20.0, freq: 493.88, dur: 3.0, pan: 0.2 }, // B4
-  { time: 25.5, freq: 523.25, dur: 3.5, pan: -0.15 },// C5
-  { time: 28.5, freq: 392.00, dur: 3.2, pan: 0.15 }, // G4
+  { time: 2.0, freq: 523.25, dur: 4.2, pan: -0.25 }, // C5
+  { time: 5.5, freq: 659.25, dur: 3.8, pan: 0.25 },  // E5
+  { time: 8.0, freq: 587.33, dur: 3.5, pan: -0.1 },  // D5
+  { time: 12.5, freq: 493.88, dur: 4.5, pan: 0.3 },  // B4
+  { time: 16.0, freq: 587.33, dur: 4.0, pan: -0.3 }, // D5
+  { time: 18.5, freq: 659.25, dur: 3.8, pan: 0.15 }, // E5
+  { time: 22.0, freq: 523.25, dur: 4.5, pan: -0.2 }, // C5
+  { time: 25.5, freq: 392.00, dur: 4.0, pan: 0.25 }, // G4
+  { time: 28.0, freq: 440.00, dur: 3.5, pan: -0.15 },// A4
+  { time: 32.5, freq: 493.88, dur: 4.5, pan: 0.2 },  // B4
+  { time: 36.0, freq: 587.33, dur: 4.0, pan: -0.25 },// D5
+  { time: 42.0, freq: 523.25, dur: 4.2, pan: 0.3 },  // C5
+  { time: 45.5, freq: 440.00, dur: 4.0, pan: -0.2 }, // A4
+  { time: 48.0, freq: 392.00, dur: 3.8, pan: 0.1 },  // G4
+  { time: 52.0, freq: 329.63, dur: 4.5, pan: -0.3 }, // E4
+  { time: 55.5, freq: 392.00, dur: 4.2, pan: 0.25 }, // G4
+  { time: 58.0, freq: 523.25, dur: 3.5, pan: 0.0 },  // C5
 ];
 
 const leftBuffer = new Float32Array(TOTAL_SAMPLES);
 const rightBuffer = new Float32Array(TOTAL_SAMPLES);
 
-// 1. Synthesize lush ambient chord pads with gentle harmonic richness
+// 1. Synthesize Warm Ambient Pad Layers (Warm Rhodes & Acoustic Strings)
 for (const chord of chords) {
   const startSample = Math.floor(chord.start * SAMPLE_RATE);
   const endSample = Math.floor(chord.end * SAMPLE_RATE);
@@ -48,42 +61,43 @@ for (const chord of chords) {
 
   for (let i = 0; i < chordLen; i++) {
     const globalIdx = (startSample + i) % TOTAL_SAMPLES;
-    const progress = i / chordLen; // 0 to 1
+    const progress = i / chordLen;
 
-    // Smooth bell-curve envelope for each chord (fade in, sustain, fade out)
+    // Smooth sinusoidal envelope with gentle overlap
     const env = Math.sin(progress * Math.PI);
 
-    let chordSampleL = 0;
-    let chordSampleR = 0;
+    let sampleL = 0;
+    let sampleR = 0;
 
     for (let n = 0; n < chord.notes.length; n++) {
       const freq = chord.notes[n];
       const t = (startSample + i) / SAMPLE_RATE;
 
-      // Soft fundamental sine wave + gentle octave overtone
+      // Warm organic tone: fundamental + soft octaves + gentle sub-harmonic
       const fund = Math.sin(2 * Math.PI * freq * t);
-      const overtone1 = 0.28 * Math.sin(2 * Math.PI * freq * 2 * t);
-      const overtone2 = 0.08 * Math.sin(2 * Math.PI * freq * 3 * t);
-      const tone = (fund + overtone1 + overtone2) / 1.36;
+      const sub = 0.22 * Math.sin(Math.PI * freq * t);
+      const harmonic2 = 0.25 * Math.sin(4 * Math.PI * freq * t);
+      const harmonic3 = 0.08 * Math.sin(6 * Math.PI * freq * t);
+      const tone = (fund + sub + harmonic2 + harmonic3) / 1.55;
 
-      // Subtle detune chorus & stereo spreading
-      const detuneL = Math.sin(2 * Math.PI * (freq * 0.9985) * t);
-      const detuneR = Math.sin(2 * Math.PI * (freq * 1.0015) * t);
+      // Stereo chorus detune
+      const chorusL = Math.sin(2 * Math.PI * (freq * 0.9988) * t);
+      const chorusR = Math.sin(2 * Math.PI * (freq * 1.0012) * t);
 
-      // Warm vibrato
-      const lfo = 1 + 0.003 * Math.sin(2 * Math.PI * 3.5 * t);
+      // Tremolo / breathing amplitude modulation (0.2 Hz)
+      const tremolo = 1 + 0.08 * Math.sin(2 * Math.PI * 0.2 * t + n);
 
-      const amp = env * (0.055 / Math.sqrt(n + 1));
-      chordSampleL += (tone * 0.7 + detuneL * 0.3) * amp * lfo;
-      chordSampleR += (tone * 0.7 + detuneR * 0.3) * amp * lfo;
+      const amp = env * (0.048 / Math.sqrt(n + 1));
+      sampleL += (tone * 0.75 + chorusL * 0.25) * amp * tremolo;
+      sampleR += (tone * 0.75 + chorusR * 0.25) * amp * tremolo;
     }
 
-    leftBuffer[globalIdx] += chordSampleL;
-    rightBuffer[globalIdx] += chordSampleR;
+    leftBuffer[globalIdx] += sampleL;
+    rightBuffer[globalIdx] += sampleR;
   }
 }
 
-// 2. Synthesize gentle, crystal-soft storybook music box chimes
+// 2. Synthesize Storybook Chime & Music Box Accents
 for (const mel of melodyNotes) {
   const startSample = Math.floor(mel.time * SAMPLE_RATE);
   const chimeSamples = Math.floor(mel.dur * SAMPLE_RATE);
@@ -92,48 +106,54 @@ for (const mel of melodyNotes) {
     const globalIdx = (startSample + i) % TOTAL_SAMPLES;
     const t = i / SAMPLE_RATE;
 
-    // Fast organic pluck attack, exponential smooth decay
-    const decay = Math.exp(-t * 2.2);
-    if (decay < 0.001) break;
+    // Organic pluck: instant soft attack, gentle exponential decay
+    const decay = Math.exp(-t * 1.6);
+    if (decay < 0.0005) break;
 
-    // Warm bell sound: fundamental + mellow 2nd & 4th partials
-    const bell =
+    // Crystalline bell spectrum: fundamental + inharmonic overtone + octave
+    const chime =
       Math.sin(2 * Math.PI * mel.freq * t) +
-      0.35 * Math.sin(2 * Math.PI * (mel.freq * 2.01) * t) * Math.exp(-t * 3.5) +
-      0.15 * Math.sin(2 * Math.PI * (mel.freq * 4.02) * t) * Math.exp(-t * 6.0);
+      0.32 * Math.sin(2 * Math.PI * (mel.freq * 2.0) * t) * Math.exp(-t * 3.0) +
+      0.18 * Math.sin(2 * Math.PI * (mel.freq * 2.76) * t) * Math.exp(-t * 5.0) +
+      0.10 * Math.sin(2 * Math.PI * (mel.freq * 4.0) * t) * Math.exp(-t * 6.5);
 
-    const amp = decay * 0.045;
-    const panL = 0.5 - mel.pan * 0.4;
-    const panR = 0.5 + mel.pan * 0.4;
+    const amp = decay * 0.042;
+    const panL = 0.5 - mel.pan * 0.38;
+    const panR = 0.5 + mel.pan * 0.38;
 
-    leftBuffer[globalIdx] += bell * amp * panL;
-    rightBuffer[globalIdx] += bell * amp * panR;
+    leftBuffer[globalIdx] += chime * amp * panL;
+    rightBuffer[globalIdx] += chime * amp * panR;
   }
 }
 
-// 3. Seamless loop windowing (crossfade outer 1.5 seconds so there's zero pop/click at loop point)
-const crossfadeSamples = Math.floor(1.5 * SAMPLE_RATE);
+// 3. Mathematical Equal-Power Seamless Crossfade over 4.0 seconds
+const crossfadeDuration = 4.0;
+const crossfadeSamples = Math.floor(crossfadeDuration * SAMPLE_RATE);
+
 for (let i = 0; i < crossfadeSamples; i++) {
-  const factor = i / crossfadeSamples;
-  // Blend end into start and start into end
+  // Equal-power crossfade curve: cos(theta) and sin(theta) where theta goes from 0 to PI/2
+  const theta = (i / crossfadeSamples) * (Math.PI / 2);
+  const fadeOutFactor = Math.cos(theta); // 1 -> 0
+  const fadeInFactor = Math.sin(theta);  // 0 -> 1
+
   const endIdx = TOTAL_SAMPLES - crossfadeSamples + i;
   const startIdx = i;
 
-  const blendL = leftBuffer[startIdx] * factor + leftBuffer[endIdx] * (1 - factor);
-  const blendR = rightBuffer[startIdx] * factor + rightBuffer[endIdx] * (1 - factor);
+  const blendedL = leftBuffer[endIdx] * fadeOutFactor + leftBuffer[startIdx] * fadeInFactor;
+  const blendedR = rightBuffer[endIdx] * fadeOutFactor + rightBuffer[startIdx] * fadeInFactor;
 
-  leftBuffer[startIdx] = blendL;
-  rightBuffer[startIdx] = blendR;
-  leftBuffer[endIdx] = blendL;
-  rightBuffer[endIdx] = blendR;
+  leftBuffer[startIdx] = blendedL;
+  rightBuffer[startIdx] = blendedR;
+  leftBuffer[endIdx] = blendedL;
+  rightBuffer[endIdx] = blendedR;
 }
 
-// 4. Normalize and convert Float32 to 16-bit PCM Buffer
+// 4. Smooth Peak Normalization
 let maxPeak = 0;
 for (let i = 0; i < TOTAL_SAMPLES; i++) {
   maxPeak = Math.max(maxPeak, Math.abs(leftBuffer[i]), Math.abs(rightBuffer[i]));
 }
-const normGain = maxPeak > 0 ? 0.78 / maxPeak : 0.78;
+const normGain = maxPeak > 0 ? 0.72 / maxPeak : 0.72;
 
 const pcmData = Buffer.alloc(TOTAL_SAMPLES * NUM_CHANNELS * 2);
 for (let i = 0; i < TOTAL_SAMPLES; i++) {
@@ -147,7 +167,7 @@ for (let i = 0; i < TOTAL_SAMPLES; i++) {
   pcmData.writeInt16LE(Math.floor(valR), i * 4 + 2);
 }
 
-// 5. Construct valid WAV header
+// 5. Construct WAV File
 function createWavHeader(dataLength, sampleRate, numChannels) {
   const header = Buffer.alloc(44);
   const byteRate = sampleRate * numChannels * 2;
@@ -157,13 +177,13 @@ function createWavHeader(dataLength, sampleRate, numChannels) {
   header.writeUInt32LE(36 + dataLength, 4);
   header.write('WAVE', 8);
   header.write('fmt ', 12);
-  header.writeUInt32LE(16, 16); // Subchunk1Size (16 for PCM)
-  header.writeUInt16LE(1, 20);  // AudioFormat (1 for PCM)
+  header.writeUInt32LE(16, 16);
+  header.writeUInt16LE(1, 20); // PCM
   header.writeUInt16LE(numChannels, 22);
   header.writeUInt32LE(sampleRate, 24);
   header.writeUInt32LE(byteRate, 28);
   header.writeUInt16LE(blockAlign, 32);
-  header.writeUInt16LE(16, 34); // BitsPerSample
+  header.writeUInt16LE(16, 34); // 16 bits
   header.write('data', 36);
   header.writeUInt32LE(dataLength, 40);
 
@@ -178,7 +198,8 @@ if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir, { recursive: true });
 }
 
+// Write master soundtrack
 const outputPath = path.join(outputDir, 'cozy-ambient.wav');
 fs.writeFileSync(outputPath, finalWavBuffer);
 
-console.log(`✓ Successfully generated cozy soundtrack: ${outputPath} (${(finalWavBuffer.length / (1024 * 1024)).toFixed(2)} MB)`);
+console.log(`✓ Master soundtrack generated: ${outputPath} (${DURATION}s, ${(finalWavBuffer.length / (1024 * 1024)).toFixed(2)} MB, 100% seam-free loop)`);

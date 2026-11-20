@@ -1,35 +1,49 @@
 # SOMEWHERE
 
-> An interactive, hand-crafted 3D world that tells the story of an engineer through exploration, characters, places, and projects.
+> An interactive, hand-crafted 3D portfolio world that tells the story of an engineer through exploration, characters, places, and projects.
 
 ---
 
-## 🌟 Landing Experience Refinement (Prompt 04)
+## 🏡 Milestone: The Living Town Experience
 
-Building upon the Milestone 02 architecture, this update refines the visitor experience to closely match the atmosphere, typography balance, and serene charm of the reference design:
+Transforming the miniature world into an explorable, storybook-inspired 3D town where visitors can walk through cobblestone streets, talk with charming NPC guides, and discover honest, verified engineering accomplishments.
 
-### 🎨 Key Refinements
+### 🌟 Key Highlights
 
-1. **Branding Removal**:
-   - Removed the internal project name and large 3D typography from the opening scene.
-   - Primary button simplified to read simply `ENTER`.
-   - Clean, uncluttered storybook aesthetic without distracting taglines or logos.
-2. **Recreated Welcome-Text Composition**:
-   - Compact stacked typography: `HELLO / THERE / YOU`.
-   - Horizontally centered directly above the planet horizon.
-   - Tight line-height (0.88) with playful staggered spring entrance via GSAP (`y: 28 -> 0`, `opacity: 0 -> 1`).
-   - Completely responsive without colliding or overflowing on mobile, tablet, or ultrawide screens.
-3. **Non-Interactive Rotating Planet**:
-   - Planet rotates automatically and gently with constant smooth angular velocity.
-   - Dragging, cursor rotating, touch gestures, wheel zooming, and camera panning are completely disabled on the landing page.
-   - `ENTER` remains the focal, primary landing interaction.
-4. **Recalibrated Camera Framing**:
-   - Camera position and responsive distance scaled adaptively to give the miniature planet generous breathing room around all edges.
-   - Planet is comfortably visible on initial load across 16 tested viewports.
-5. **Soothing Ambient Soundtrack**:
-   - Original, peaceful ambient music box / Rhodes instrumental loop (`public/audio/cozy-ambient.wav`).
-   - Discreet `AudioControl` button with warm volume fade-in and fade-out.
-   - 100% compliant with browser autoplay policies.
+1. **Seamless Orbit-to-Town Transition**:
+   - Clean, non-interactive miniature planet on landing with stacked `HELLO / THERE / YOU` typography and `ENTER` button.
+   - Smooth camera fly-in and playful mosaic block transition bringing the visitor into the town square.
+   - Continuous 60-second ambient soundtrack (`cozy-ambient.wav`) that continues playing seamlessly across the transition with zero seam pop.
+
+2. **Explorable 3D Player Character**:
+   - Stylized avatar representing Shiv Kumar with natural procedural walking kinematics, breathing idle, and direction facing.
+   - Dual-input locomotion: Keyboard (WASD / Arrows) and Click/Tap-to-move ground raycasting with animated target beacon ring.
+   - Real-time building collision avoidance and bounds clamping.
+   - Third-person follow camera smoothly damping behind the character.
+
+3. **Exactly 6 Primary Functional Destinations**:
+   - 🏠 **The Little House** (`about`) — About Shiv Kumar: engineering background, passions, and personal philosophy.
+   - 🎓 **The University** (`education`) — Techno India University: B.Tech Computer Science & Engineering with Cloud Computing specialization.
+   - 🔧 **The Workshop** (`experience`) — Practical engineering: self-directed projects, systems craft, and open-source contributions (100% honest, zero fabricated employment).
+   - ✨ **The Invention House** (`projects`) — Verified projects with live GitHub links:
+     - **Shadow Exchange**: P2P dark pool DEX with zero-knowledge order matching.
+     - **ASTRA**: Low-latency distributed RPC framework in Rust.
+     - **Faultline**: Chaos engineering platform for Kubernetes and cloud clusters.
+     - **ForgeFit**: AI-powered fitness workout tracking platform.
+     - **VEENA**: Real-time collaborative audio synthesizer on Web Audio API.
+   - 📚 **The Library** (`skills`) — Technical knowledge matrix: Cloud & Infrastructure, Systems & Backend, WebGL & 3D, and Tooling.
+   - 📬 **The Post Office** (`contact`) — Verified channels: Direct email (`shivkumar6990655@gmail.com`), GitHub, LinkedIn, and Résumé download.
+
+4. **Charming Animated NPC Guides**:
+   - **Barnaby the Elder**: Town elder welcoming visitors at the central fountain.
+   - **Timothy the Scholar**: Resident librarian guiding visitors toward the University and Library.
+   - **Maeve the Crafter**: Artisan directing visitors toward the Workshop and Invention House.
+   - **Pip the Inventor**: Energetic tinkerer celebrating open-source projects.
+   - **Clara the Postmistress**: Cheerful courier offering direct postal contact with Shiv.
+
+5. **Canonical Single Source of Truth**:
+   - `CANONICAL_WORLD` defines 17 buildings, 5 NPCs, 8 terrain features, 5 paths, and 32 props.
+   - Both the spherical miniature planet and the flat walkable town view consume this same manifest.
 
 ---
 
@@ -51,43 +65,17 @@ npm run dev
 # Run canonical world manifest integrity verification
 npx vite-node test-world-manifest.mjs
 
-# Run automated 16-viewport responsive & refinement test suite
+# Run automated 16-viewport responsive & Living Town test suite
 node test-responsive.mjs
 
-# Capture visual screenshots
-node capture-refinement.mjs
+# TypeScript validation
+npx tsc --noEmit
 
 # Build production bundle
 npm run build
-
-# Run TypeScript typechecks
-npm run lint
 ```
 
 ---
 
-## 🧪 Testing & Verification Results
-
-1. **Canonical Manifest Integrity Test (`test-world-manifest.mjs`)**:
-   - **100% PASS**: 11 Landmark Buildings & 32 Props verified with unique IDs and valid coordinate bounds.
-2. **Universal Responsive & Refinement Test Suite (`test-responsive.mjs`)**:
-   - **16 of 16 Viewports Passed (100%)**:
-     - No public-facing SOMEWHERE heading or logo.
-     - Primary button reads exactly `ENTER`.
-     - Welcome lines `HELLO / THERE / YOU` centered and in bounds.
-     - Planet drag/zoom disabled; automatic rotation confirmed.
-     - Audio toggle active with graceful fallback.
-     - 0 horizontal or vertical overflow across all 16 screen sizes.
-3. **Production Build (`tsc && vite build`)**:
-   - Clean bundle built in 12.69s.
-
----
-
-## 🗺️ Progress & Roadmap
-
-- [x] **Milestone 01**: Cinematic 3D Landing Page Foundation (~15%)
-- [x] **Milestone 02**: World Architecture & Art Direction (~30%)
-- [x] **Refinement**: Landing Experience, Audio & Composition (~35%)
-- [ ] **Milestone 03**: Character & Exploration Mechanics (~55%)
-- [ ] **Milestone 04**: Interactive Buildings & Content System (~75%)
-- [ ] **Milestone 05**: Polish, Soundscapes & Production Release (~100%)
+## 📱 Responsive Coverage
+Tested and validated across 16 canonical viewports including compact mobile (320px, 360px, 390px, 430px), foldables (280px cover screen & 884px expanded), tablets, standard desktop (1440px), large desktop (1920px), and ultrawide displays (2560px).
