@@ -8,12 +8,16 @@ import { WorldDefinition, BuildingItem } from '../../world/types';
 import { SkyAndAtmosphere } from './SkyAndAtmosphere';
 import { MiniaturePlanet } from './MiniaturePlanet';
 import { TextSomewhere3D } from './TextSomewhere3D';
+import { WalkableWorldRenderer } from '../../world/WalkableWorldRenderer';
+
+export type ViewMode = 'miniature' | 'walkable';
 
 interface SceneCanvasProps {
   world: WorldDefinition;
   atmosphere: AtmospherePhaseConfig;
   isEntering: boolean;
   isEntered: boolean;
+  viewMode?: ViewMode;
   onHoverBuilding?: (building: BuildingItem | null) => void;
   onSelectBuilding?: (building: BuildingItem) => void;
 }
@@ -28,11 +32,20 @@ interface SceneCanvasProps {
 const CameraController: React.FC<{
   isEntering: boolean;
   isEntered: boolean;
-}> = ({ isEntering, isEntered }) => {
+  viewMode: ViewMode;
+}> = ({ isEntering, isEntered, viewMode }) => {
   const { camera, size } = useThree();
   const aspect = size.width / Math.max(1, size.height);
 
   const targets = useMemo(() => {
+    if (viewMode === 'walkable') {
+      // Walkable world overview camera
+      return {
+        pos: new THREE.Vector3(0, 14, 26),
+        lookAt: new THREE.Vector3(0, 0, 0),
+      };
+    }
+
     if (isEntering || isEntered) {
       // Entered town close-up view
       const z = aspect < 1.0 ? 6.4 * (1.1 / Math.max(0.48, aspect)) : 6.4;
@@ -53,7 +66,7 @@ const CameraController: React.FC<{
         lookAt: new THREE.Vector3(0, lookAtY, 0),
       };
     }
-  }, [isEntering, isEntered, aspect]);
+  }, [isEntering, isEntered, aspect, viewMode]);
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -83,6 +96,7 @@ export const SceneCanvas: React.FC<SceneCanvasProps> = ({
   atmosphere,
   isEntering,
   isEntered,
+  viewMode = 'miniature',
   onHoverBuilding,
   onSelectBuilding,
 }) => {
@@ -112,15 +126,15 @@ export const SceneCanvas: React.FC<SceneCanvasProps> = ({
           gl.toneMappingExposure = 1.05;
         }}
       >
-        <CameraController isEntering={isEntering} isEntered={isEntered} />
+        <CameraController isEntering={isEntering} isEntered={isEntered} viewMode={viewMode} />
 
         <OrbitControls
-          enablePan={false}
+          enablePan={viewMode === 'walkable'}
           enableZoom={!isEntering && !isEntered}
-          minDistance={6}
-          maxDistance={35}
-          minPolarAngle={Math.PI / 4}
-          maxPolarAngle={(3 * Math.PI) / 4}
+          minDistance={viewMode === 'walkable' ? 8 : 6}
+          maxDistance={viewMode === 'walkable' ? 50 : 35}
+          minPolarAngle={viewMode === 'walkable' ? 0.2 : Math.PI / 4}
+          maxPolarAngle={viewMode === 'walkable' ? Math.PI / 2.2 : (3 * Math.PI) / 4}
           rotateSpeed={0.6}
           dampingFactor={0.06}
           enableDamping
@@ -130,19 +144,31 @@ export const SceneCanvas: React.FC<SceneCanvasProps> = ({
         <SkyAndAtmosphere atmosphere={atmosphere} />
 
         {/* Responsive Dimensional 3D Typography */}
-        {!isEntered && (
+        {!isEntered && viewMode === 'miniature' && (
           <TextSomewhere3D atmosphereMode={atmosphere.mode} />
         )}
 
-        {/* The Canonical Miniature Town Planet */}
-        <MiniaturePlanet
-          world={world}
-          glowIntensity={atmosphere.windowGlowIntensity}
-          lanternGlowIntensity={atmosphere.lanternGlowIntensity}
-          isEntering={isEntering || isEntered}
-          onHoverBuilding={onHoverBuilding}
-          onSelectBuilding={onSelectBuilding}
-        />
+        {/* CANONICAL RENDERING PATH SELECTION */}
+        {viewMode === 'miniature' ? (
+          /* Path 1: Miniature Spherical Island */
+          <MiniaturePlanet
+            world={world}
+            glowIntensity={atmosphere.windowGlowIntensity}
+            lanternGlowIntensity={atmosphere.lanternGlowIntensity}
+            isEntering={isEntering || isEntered}
+            onHoverBuilding={onHoverBuilding}
+            onSelectBuilding={onSelectBuilding}
+          />
+        ) : (
+          /* Path 2: Flat Walkable Ground World Preview */
+          <WalkableWorldRenderer
+            world={world}
+            glowIntensity={atmosphere.windowGlowIntensity}
+            lanternGlowIntensity={atmosphere.lanternGlowIntensity}
+            onHoverBuilding={onHoverBuilding}
+            onSelectBuilding={onSelectBuilding}
+          />
+        )}
       </Canvas>
     </div>
   );

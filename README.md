@@ -4,39 +4,33 @@
 
 ---
 
-## 🌟 Milestone 01: The Cinematic 3D Landing Page
+## 🌟 Milestone 02: World Architecture & Art Direction (Target Progress: ~30%)
 
-Milestone 01 establishes the foundation of the SOMEWHERE universe with a rotating miniature town, dynamic atmosphere based on local time, dimensional 3D typography, and a cinematic block transition.
+Milestone 02 transforms the initial rotating miniature planet into a cohesive, storybook-inspired miniature town with an enforced single source of truth (`CANONICAL_WORLD`) powering dual future-compatible rendering paths.
 
-### Key Features
+### 🏛️ Key Milestone 02 Accomplishments
 
-- **Rotating Miniature Town**: A spherical illustrated planet with hand-crafted architectural landmarks:
-  - *The Town Bell & Hall*: Civic center with clock tower and brass weathervane.
-  - *Whispering Hill Windmill*: Rotating 4-blade canvas sail on a grassy knoll.
-  - *Cinnamon Hearth Bakery*: Gabled roof, bread sign, and rising chimney smoke puffs.
-  - *Stargazer Dome*: Round stone tower with copper observatory dome and telescope.
-  - *Rosebriar & Cloverfold Cottages*: Cozy storybook residences with timber framing.
-  - *Sunlit Orangery*: Curved glass solarium conserving delicate ferns.
-  - *Cloudcrest Tea Pavilion*: Tiered pagoda gazebo with open timber deck.
-  - *Beacon Lookout & Pier*: Harbor lighthouse with pulsing beacon light.
-- **Single Canonical World Definition**: Both the miniature planet and the upcoming walkable exploration world (Milestone 02) read the exact same data schema in `src/world/worldData.ts`. A transformation layer (`src/world/projection.ts`) projects canonical coordinates onto the sphere with surface normal alignment.
-- **Dynamic Time-Based Atmosphere**:
-  - Automatically synchronizes with the visitor's local browser clock.
-  - **Day** (06:00 – 17:00): Soft cerulean sky, warm sunshine, drifting white clouds.
-  - **Sunset** (17:00 – 20:30): Peach and coral twilight gradient, long golden shadows, lantern lights.
-  - **Night** (20:30 – 06:00): Deep midnight indigo, soft moonlight, glowing window lights, floating fireflies, and twinkling stars.
-  - Interactive top-right atmosphere switcher to preview Day, Sunset, Night, or re-sync with local time.
-- **Dimensional 3D Typography**: Floating "SOMEWHERE" title integrated into the 3D scene with gentle breathing animation and lighting response.
-- **Animated Welcome Message**: Configurable 3-line entrance copy (`HELLO THERE YOU`) in `src/config/contentConfig.ts`.
-- **Cinematic ENTER Interaction**:
-  - Clicking "ENTER SOMEWHERE" triggers a playful pastel mosaic block wipe.
-  - Camera swoops in gracefully with GSAP towards the Town Square.
-  - Seamless arrival card previewing Milestone 02 with a "Return to Orbit" camera fly-back.
-- **Responsiveness & Performance**:
-  - Touch drag controls to gently spin the planet.
-  - DPR clamped between 1.0 and 2.0.
-  - Procedural geometries with zero heavy texture downloads.
-  - Graceful WebGL fallback detection.
+- **Canonical World Manifest (`src/world/worldData.ts`)**:
+  - Definitive single source of truth for the entire town.
+  - 4 Cultural Districts:
+    - *Town Center & Market Plaza*: Grand Town Hall, Cinnamon Hearth Bakery, Weaver's Guildhouse, Central Fountain, Market Stalls, Timber Cart, Cobblestone High Street.
+    - *Meadow Mill & Allotments*: High Meadow Windmill with animated rotating sails, Gardener's Thatched Cottage, Apple Orchards, Fenced Vegetable Allotment.
+    - *Harbor & Azure Lagoon*: Beacon Point Lighthouse, Fisherman's Boathouse on Stilts, Stone Arch Bridge, Moored Rowboat, Whispering Pond, Azure Lagoon with ripple animations.
+    - *Stargazer Bluffs & Tea Terraces*: Stargazer Dome Observatory with celestial telescope, Cloudcrest Tea Pavilion, Botanical Orangery Greenhouse, Bookbinder's Gabled Cottage, Cherry Blossom Groves.
+- **Dual-Rendering Pipeline Architecture**:
+  - **Path 1 — Miniature Planet Renderer (`MiniaturePlanet.tsx`)**: Maps `(lat, lon, altitude)` via `getSphereTransform` onto a 3D sphere of radius 4.4, automatically orienting models along outward surface normals with local yaw.
+  - **Path 2 — Walkable World Renderer (`src/world/WalkableWorldRenderer.tsx`)**: Maps `(flatX, flatZ, altitude)` via `getFlatWorldTransform` onto a planar terrain grid with Catmull-Rom extruded cobblestone roads.
+  - *Proof of Sync*: Modifying or adding any building or prop in `CANONICAL_WORLD` automatically updates both the spherical miniature and walkable world.
+- **Art Bible & Storybook Aesthetic**:
+  - Hand-crafted pastel palette (alabaster cream, terracotta coral, moss pine green, sage, seafoam slate, azure lagoon, copper patina, cherry blossom pink).
+  - Rounded silhouettes, soft chamfers, timber trim, smoking chimneys, glowing window panes.
+  - Absolutely zero cyberpunk, neon grids, generic SaaS dashboards, or glossy plastic shaders.
+- **Interactive Storybook Cards**:
+  - Real-time hover and selection of town landmarks displaying district badges, resident identities, story snippets, and amenities.
+- **Dual View Mode Switcher**:
+  - Toggle seamlessly between **Spherical Island** and **Walkable Grid** views to inspect the architectural synchronisation live in browser.
+- **100% Universal Responsive Design**:
+  - Fully tested across 16 viewports from 280px foldable narrow cover to 2560px ultrawide displays.
 
 ---
 
@@ -52,52 +46,49 @@ Milestone 01 establishes the foundation of the SOMEWHERE universe with a rotatin
 # Install dependencies
 npm install
 
-# Start local development server
+# Start local development server (http://localhost:3000/)
 npm run dev
 
-# Run type checks and linting
-npm run lint
+# Run canonical world manifest integrity verification
+npx vite-node test-world-manifest.mjs
 
-# Production build
+# Run automated 16-viewport responsive test suite
+node test-responsive.mjs
+
+# Capture multi-angle visual screenshots
+node capture-milestone-02.mjs
+
+# Build production bundle
 npm run build
 
-# Preview production build
-npm run preview
-
-# Run automated Puppeteer QA test suite
-node test-qa.mjs
+# Run TypeScript typechecks
+npm run lint
 ```
 
 ---
 
-## 📁 Architecture Overview
+## 🧪 Testing & Verification Results
 
-```
-src/
-├── config/
-│   ├── atmosphereConfig.ts    # Time schedules, sky palettes & lighting presets
-│   └── contentConfig.ts       # Central editable copy & typography config
-├── world/
-│   ├── types.ts               # Core canonical world definition schemas
-│   ├── projection.ts          # Spherical & planar transformation math
-│   └── worldData.ts           # Canonical world definition (single source of truth)
-└── components/
-    ├── canvas/
-    │   ├── SceneCanvas.tsx    # Canvas setup, GSAP camera controller, render loop
-    │   ├── MiniaturePlanet.tsx# Spherical miniature town & terrain
-    │   ├── BuildingModels.tsx # Storybook stylized 3D buildings
-    │   ├── PropModels.tsx     # Stylized foliage, lanterns, benches, well
-    │   ├── SkyAndAtmosphere.tsx# Clouds, flocking birds, stars, fireflies
-    │   └── TextSomewhere3D.tsx# 3D dimensional typography
-    └── ui/
-        ├── WelcomeOverlay.tsx # Typography reveal, tooltips, ENTER CTA
-        ├── AtmosphereControls.tsx# Time badge & Day/Sunset/Night selector
-        ├── BlockTransition.tsx# Playful mosaic block wipe transition
-        └── FallbackView.tsx   # Graceful WebGL/hardware fallback
-```
+1. **Canonical Manifest Integrity Test (`test-world-manifest.mjs`)**:
+   - `CANONICAL_WORLD` v2.0.0 passed with 100% integrity.
+   - 11 Landmark Buildings & 32 Props verified with unique IDs and valid coordinate bounds.
+   - Dual transform math (`getSphereTransform` & `getFlatWorldTransform`) verified with zero NaN values.
+   - Single Source of Truth synchronization verified across simulated building mutations.
+
+2. **Universal Responsive Test Suite (`test-responsive.mjs`)**:
+   - **16 of 16 Viewports Passed (100%)**:
+     - 320px, 360px, 375px, 390px, 430px mobile widths (portrait & landscape)
+     - 280px narrow foldable cover & 884px expanded foldable layouts
+     - 600px, 768px, 1024px tablets (portrait & landscape)
+     - 1280px laptop, 1440px standard desktop, 1920px large desktop, 2560px ultrawide
+     - Orientation flip (portrait -> landscape) and `prefers-reduced-motion`
 
 ---
 
-## 📜 License & Asset Manifest
-See [ASSET_MANIFEST.md](file:///C:/Users/sk699/OneDrive/Desktop/somewhere/ASSET_MANIFEST.md) for licensing, asset attribution, and design system specifications.
-See [PROJECT_CONTEXT.md](file:///C:/Users/sk699/OneDrive/Desktop/somewhere/PROJECT_CONTEXT.md) for architectural notes.
+## 🗺️ Progress & Roadmap
+
+- [x] **Milestone 01**: Cinematic 3D Landing Page (~15%)
+- [x] **Milestone 02**: World Architecture & Art Direction (~30%)
+- [ ] **Milestone 03**: Character & Exploration Mechanics (~50%)
+- [ ] **Milestone 04**: Interactive Buildings & Content System (~70%)
+- [ ] **Milestone 05**: Polish, Soundscapes & Production Release (~100%)

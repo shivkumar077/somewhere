@@ -1,38 +1,56 @@
 /**
- * Types defining the canonical world data.
+ * CANONICAL WORLD ARCHITECTURE SPECIFICATION
  *
  * CRITICAL ARCHITECTURAL CONTRACT:
- * Both the spherical miniature planet renderer (Milestone 01)
- * AND the future walkable first/third-person world renderer (Milestone 02)
+ * Both the spherical miniature planet renderer (Milestone 01/02)
+ * AND the future walkable first/third-person world renderer
  * read this SAME canonical definition.
  *
  * If a building or prop is added, moved, or deleted here,
- * both views reflect that change.
+ * both views reflect that change automatically.
  */
+
+export type BuildingCategory =
+  | 'civic'
+  | 'residential'
+  | 'commercial'
+  | 'landmark'
+  | 'agriculture'
+  | 'coastal'
+  | 'craft';
 
 export type BuildingType =
   | 'town-hall'
   | 'windmill'
   | 'bakery'
   | 'observatory'
-  | 'cottage'
+  | 'cottage-gardener'
+  | 'cottage-bookbinder'
+  | 'cottage-fisherman'
   | 'greenhouse'
   | 'tea-house'
   | 'lighthouse'
-  | 'watermill';
+  | 'blacksmith-workshop'
+  | 'weaver-house';
 
 export type PropType =
   | 'tree-round'
   | 'tree-pine'
   | 'tree-blossom'
+  | 'tree-willow'
+  | 'tree-apple'
   | 'bush-flower'
   | 'lantern'
   | 'bench'
   | 'fence'
   | 'bridge'
   | 'well'
+  | 'fountain'
   | 'cart'
-  | 'pond'
+  | 'market-stall'
+  | 'rowboat'
+  | 'barrel-stack'
+  | 'garden-plot'
   | 'flower-patch'
   | 'chimney-smoke';
 
@@ -58,10 +76,20 @@ export interface CanonicalCoordinates {
   flatZ: number;
 }
 
+export interface BuildingRenderingConfig {
+  lodLevel: 'low' | 'medium' | 'high';
+  castShadow: boolean;
+  receiveShadow: boolean;
+  hasWindowGlow: boolean;
+  glowColorOverride?: string;
+}
+
 export interface BuildingItem {
   id: string;
   name: string;
   type: BuildingType;
+  category: BuildingCategory;
+  assetKey: string;
   description: string;
   coordinates: CanonicalCoordinates;
   rotationY: number; // in degrees
@@ -78,12 +106,16 @@ export interface BuildingItem {
     residentOrPurpose: string;
     milestoneIntroduced: number;
     interactionTargetId?: string;
+    amenities?: string[];
+    tags?: string[];
   };
+  rendering?: BuildingRenderingConfig;
 }
 
 export interface PropItem {
   id: string;
   type: PropType;
+  assetKey: string;
   coordinates: CanonicalCoordinates;
   rotationY: number; // in degrees
   scale?: [number, number, number] | number;
@@ -106,11 +138,22 @@ export interface PathSegment {
   waypoints: PathWaypoint[];
 }
 
-export interface LandmarkItem {
+export interface TerrainFeature {
+  id: string;
+  name: string;
+  type: 'hill' | 'ridge' | 'pond' | 'lagoon' | 'plaza-stone';
+  coordinates: CanonicalCoordinates;
+  radius: number;
+  height?: number;
+  color: string;
+}
+
+export interface DistrictItem {
   id: string;
   title: string;
-  coordinates: CanonicalCoordinates;
   description: string;
+  centerCoordinates: CanonicalCoordinates;
+  colorTag: string;
 }
 
 export interface WorldDefinition {
@@ -118,9 +161,9 @@ export interface WorldDefinition {
   name: string;
   planetRadius: number; // for spherical projection
   flatWorldBounds: { minX: number; maxX: number; minZ: number; maxZ: number };
+  districts: DistrictItem[];
   buildings: BuildingItem[];
   props: PropItem[];
   paths: PathSegment[];
-  landmarks: LandmarkItem[];
+  terrainFeatures: TerrainFeature[];
 }
-

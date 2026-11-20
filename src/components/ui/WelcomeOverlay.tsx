@@ -2,12 +2,15 @@ import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { CONTENT_CONFIG } from '../../config/contentConfig';
 import { BuildingItem } from '../../world/types';
-import { Sparkles, Compass, ArrowRight, RotateCcw } from 'lucide-react';
+import { Sparkles, Compass, ArrowRight, RotateCcw, MapPin, Layers } from 'lucide-react';
 import { useResponsive } from '../../hooks/useResponsive';
+import { ViewMode } from '../canvas/SceneCanvas';
 
 interface WelcomeOverlayProps {
   isEntered: boolean;
   isTransitioning: boolean;
+  viewMode?: ViewMode;
+  onToggleViewMode?: () => void;
   onEnter: () => void;
   onReturnToOrbit: () => void;
   hoveredBuilding: BuildingItem | null;
@@ -18,6 +21,8 @@ interface WelcomeOverlayProps {
 export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
   isEntered,
   isTransitioning,
+  viewMode = 'miniature',
+  onToggleViewMode,
   onEnter,
   onReturnToOrbit,
   hoveredBuilding,
@@ -65,6 +70,8 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
       );
     }
   }, [isEntered, isTransitioning]);
+
+  const activeBuilding = selectedBuilding || hoveredBuilding;
 
   return (
     <div
@@ -116,7 +123,7 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
                 fontFamily: "'Fredoka', sans-serif",
               }}
             >
-              {isNarrowFoldable ? 'M01' : CONTENT_CONFIG.milestoneTitle}
+              {isNarrowFoldable ? 'M02' : 'MILESTONE 02'}
             </span>
           </div>
         </div>
@@ -128,11 +135,11 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
           data-testid="arrived-card"
           style={{
             alignSelf: 'center',
-            backgroundColor: 'rgba(255, 255, 255, 0.88)',
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
             backdropFilter: 'blur(16px)',
             borderRadius: '24px',
             padding: isShortLandscape ? '14px 24px' : 'clamp(20px, 4vw, 32px)',
-            maxWidth: 'min(440px, 92vw)',
+            maxWidth: 'min(460px, 92vw)',
             maxHeight: '85vh',
             overflowY: 'auto',
             textAlign: 'center',
@@ -171,47 +178,78 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
 
           <p
             style={{
-              margin: isShortLandscape ? '0 0 12px' : '0 0 18px',
+              margin: isShortLandscape ? '0 0 10px' : '0 0 16px',
               fontSize: isShortLandscape ? '12px' : '14px',
               color: '#6c584c',
               lineHeight: 1.5,
             }}
           >
-            You have arrived at <strong>The Town Square</strong>. The miniature world has paused its orbit.
-            Milestone 01 foundation is complete — walkable world exploration will arrive in Milestone 02.
+            You have arrived at <strong>The Town Square</strong>.
+            The canonical manifest defines 11 architectural landmarks across 4 districts.
           </p>
 
-          <button
-            onClick={onReturnToOrbit}
-            aria-label="Return to planet orbit view"
+          <div
             style={{
-              display: 'inline-flex',
-              alignItems: 'center',
+              display: 'flex',
               gap: '8px',
-              backgroundColor: '#e76f51',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '24px',
-              padding: isShortLandscape ? '8px 18px' : '11px 22px',
-              fontSize: isShortLandscape ? '12px' : '14px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              boxShadow: '0 4px 14px rgba(231, 111, 81, 0.35)',
-              transition: 'transform 0.15s ease, background-color 0.15s ease',
-              minHeight: '38px',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#d65a3c';
-              e.currentTarget.style.transform = 'translateY(-2px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#e76f51';
-              e.currentTarget.style.transform = 'translateY(0)';
+              justifyContent: 'center',
+              flexWrap: 'wrap',
+              marginTop: '12px',
             }}
           >
-            <RotateCcw size={15} />
-            <span>Return to Orbit</span>
-          </button>
+            {/* View Mode Toggle: Spherical Miniature vs Flat Walkable World */}
+            <button
+              onClick={onToggleViewMode}
+              aria-label="Toggle between Spherical Miniature and Walkable Grid renderer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                backgroundColor: viewMode === 'walkable' ? '#2a9d8f' : '#faedcd',
+                color: viewMode === 'walkable' ? '#ffffff' : '#5c3a21',
+                border: 'none',
+                borderRadius: '20px',
+                padding: '9px 18px',
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <Layers size={14} />
+              <span>{viewMode === 'walkable' ? 'View: Walkable Grid (Active)' : 'Preview: Walkable Grid'}</span>
+            </button>
+
+            {/* Return to Orbit Button */}
+            <button
+              onClick={onReturnToOrbit}
+              aria-label="Return to planet orbit view"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                backgroundColor: '#e76f51',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '20px',
+                padding: '9px 18px',
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(231, 111, 81, 0.35)',
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#d65a3c';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#e76f51';
+              }}
+            >
+              <RotateCcw size={14} />
+              <span>Return to Orbit</span>
+            </button>
+          </div>
         </div>
       ) : (
         /* Left Hero Welcome Message */
@@ -272,40 +310,75 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
         }}
       >
         {/* Hovered / Selected Building Card */}
-        {(hoveredBuilding || selectedBuilding) && !isEntered && (
+        {activeBuilding && !isEntered && (
           <div
+            data-testid="building-tooltip"
             style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              backgroundColor: 'rgba(255, 255, 255, 0.92)',
               backdropFilter: 'blur(10px)',
-              padding: '8px 16px',
-              borderRadius: '16px',
-              boxShadow: '0 6px 18px rgba(0, 0, 0, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.6)',
+              padding: '10px 18px',
+              borderRadius: '18px',
+              boxShadow: '0 6px 20px rgba(0, 0, 0, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.7)',
               textAlign: 'center',
               pointerEvents: 'auto',
-              maxWidth: 'min(320px, 90vw)',
+              maxWidth: 'min(360px, 92vw)',
             }}
           >
             <div
               style={{
-                fontSize: '13px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                backgroundColor: '#faedcd',
+                color: '#8d5b4c',
+                fontSize: '10px',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                padding: '2px 8px',
+                borderRadius: '10px',
+                marginBottom: '4px',
+              }}
+            >
+              <MapPin size={10} />
+              <span>{activeBuilding.category}</span>
+            </div>
+
+            <div
+              style={{
+                fontSize: '14px',
                 fontWeight: 700,
                 color: '#3d312a',
                 fontFamily: "'Fredoka', sans-serif",
               }}
             >
-              {(selectedBuilding || hoveredBuilding)?.name}
+              {activeBuilding.name}
             </div>
+
             <div
               style={{
                 fontSize: '11px',
                 color: '#6c584c',
-                marginTop: '2px',
-                lineHeight: 1.3,
+                marginTop: '3px',
+                lineHeight: 1.35,
               }}
             >
-              {(selectedBuilding || hoveredBuilding)?.description}
+              {activeBuilding.description}
             </div>
+
+            {activeBuilding.metadata.storySnippet && (
+              <div
+                style={{
+                  fontSize: '10px',
+                  color: '#8a7968',
+                  fontStyle: 'italic',
+                  marginTop: '4px',
+                }}
+              >
+                "{activeBuilding.metadata.storySnippet}"
+              </div>
+            )}
+
             {selectedBuilding && (
               <button
                 onClick={onClearSelectedBuilding}
@@ -318,7 +391,7 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
                   border: 'none',
                   cursor: 'pointer',
                   textDecoration: 'underline',
-                  padding: '4px',
+                  padding: '2px 6px',
                 }}
               >
                 close
@@ -340,7 +413,7 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
               alignItems: 'center',
               justifyContent: 'center',
               gap: '8px',
-              backgroundColor: '#e76f51', // warm coral
+              backgroundColor: '#e76f51',
               color: '#ffffff',
               border: '2px solid #fefae0',
               borderRadius: '32px',

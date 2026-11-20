@@ -5,7 +5,7 @@ import {
   AtmosphereMode,
   getAtmosphereFromLocalTime,
 } from './config/atmosphereConfig';
-import { SceneCanvas } from './components/canvas/SceneCanvas';
+import { SceneCanvas, ViewMode } from './components/canvas/SceneCanvas';
 import { WelcomeOverlay } from './components/ui/WelcomeOverlay';
 import { AtmosphereControls } from './components/ui/AtmosphereControls';
 import { BlockTransition } from './components/ui/BlockTransition';
@@ -38,6 +38,7 @@ export const App: React.FC = () => {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isEntering, setIsEntering] = useState(false);
   const [isEntered, setIsEntered] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('miniature');
 
   // Interactive inspection state
   const [hoveredBuilding, setHoveredBuilding] = useState<BuildingItem | null>(null);
@@ -87,6 +88,7 @@ export const App: React.FC = () => {
   const handleReturnToOrbit = useCallback(() => {
     setIsEntered(false);
     setIsEntering(false);
+    setViewMode('miniature');
   }, []);
 
   const formattedTime = useMemo(() => {
@@ -114,6 +116,7 @@ export const App: React.FC = () => {
         atmosphere={currentAtmosphere}
         isEntering={isEntering}
         isEntered={isEntered}
+        viewMode={viewMode}
         onHoverBuilding={setHoveredBuilding}
         onSelectBuilding={setSelectedBuilding}
       />
@@ -130,6 +133,8 @@ export const App: React.FC = () => {
       <WelcomeOverlay
         isEntered={isEntered}
         isTransitioning={isTransitioning}
+        viewMode={viewMode}
+        onToggleViewMode={() => setViewMode(v => v === 'miniature' ? 'walkable' : 'miniature')}
         onEnter={handleEnter}
         onReturnToOrbit={handleReturnToOrbit}
         hoveredBuilding={hoveredBuilding}
@@ -146,4 +151,3 @@ export const App: React.FC = () => {
     </div>
   );
 };
-

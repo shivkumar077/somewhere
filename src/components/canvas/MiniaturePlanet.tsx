@@ -15,6 +15,12 @@ interface MiniaturePlanetProps {
   onSelectBuilding?: (building: BuildingItem) => void;
 }
 
+/**
+ * Spherical Miniature Town Planet (Milestone 02 Path 1)
+ *
+ * Reads CANONICAL_WORLD and projects each building, path, prop,
+ * and terrain feature onto the spherical island with surface-normal alignment.
+ */
 export const MiniaturePlanet: React.FC<MiniaturePlanetProps> = ({
   world,
   glowIntensity,
@@ -58,37 +64,40 @@ export const MiniaturePlanet: React.FC<MiniaturePlanetProps> = ({
     });
   }, [world]);
 
-  // Precompute decorative hill mounds on the globe
-  const hillMounds = useMemo(() => {
-    return [
-      { lat: 45, lon: 110, radius: 1.4, height: 0.35, color: '#8cb33e' }, // Windmill hill
-      { lat: 55, lon: -110, radius: 1.3, height: 0.3, color: '#7ba035' }, // Observatory ridge
-      { lat: 30, lon: -160, radius: 1.1, height: 0.25, color: '#8cb33e' }, // Tea knoll
-      { lat: -35, lon: 105, radius: 1.2, height: 0.2, color: '#97be44' }, // Greenhouse slope
-      { lat: -55, lon: 65, radius: 1.5, height: 0.28, color: '#83a838' }, // South pasture
-      { lat: 10, lon: 140, radius: 1.3, height: 0.22, color: '#8cb33e' }, // Far east knoll
-    ].map((hill, i) => {
-      const pos = latLonToSpherePosition(hill.lat, hill.lon, world.planetRadius, hill.height * 0.4);
-      const normal = pos.clone().normalize();
-      const quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
-      return { ...hill, id: `hill-${i}`, pos, quat };
-    });
-  }, [world.planetRadius]);
+  // Precompute terrain features (hills, ridges) from canonical world definition
+  const hillFeatures = useMemo(() => {
+    return (world.terrainFeatures || [])
+      .filter((t) => t.type === 'hill' || t.type === 'ridge')
+      .map((feat) => {
+        const height = feat.height || 0.3;
+        const pos = latLonToSpherePosition(
+          feat.coordinates.lat,
+          feat.coordinates.lon,
+          world.planetRadius,
+          height * 0.4
+        );
+        const normal = pos.clone().normalize();
+        const quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
+        return { ...feat, pos, quat, height };
+      });
+  }, [world]);
 
-  // Precompute water pond features
-  const ponds = useMemo(() => {
-    return [
-      // Whispering pond near Cloverfold cottage
-      { lat: -22, lon: -55, radius: 1.1, color: '#38bdf8' },
-      // Lagoon near lighthouse
-      { lat: -45, lon: -22, radius: 0.9, color: '#0ea5e9' },
-    ].map((pond, i) => {
-      const pos = latLonToSpherePosition(pond.lat, pond.lon, world.planetRadius, 0.02);
-      const normal = pos.clone().normalize();
-      const quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
-      return { ...pond, id: `pond-${i}`, pos, quat };
-    });
-  }, [world.planetRadius]);
+  // Precompute water bodies (lakes, ponds, lagoons) from canonical world definition
+  const waterFeatures = useMemo(() => {
+    return (world.terrainFeatures || [])
+      .filter((t) => t.type === 'pond' || t.type === 'lagoon')
+      .map((feat) => {
+        const pos = latLonToSpherePosition(
+          feat.coordinates.lat,
+          feat.coordinates.lon,
+          world.planetRadius,
+          0.02
+        );
+        const normal = pos.clone().normalize();
+        const quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
+        return { ...feat, pos, quat };
+      });
+  }, [world]);
 
   // Precompute path curves along surface
   const pathMeshes = useMemo(() => {
@@ -98,7 +107,7 @@ export const MiniaturePlanet: React.FC<MiniaturePlanetProps> = ({
       );
       if (points.length < 2) return null;
       const curve = new THREE.CatmullRomCurve3(points);
-      const geometry = new THREE.TubeGeometry(curve, 24, p.width * 0.45, 6, false);
+      const geometry = new THREE.TubeGeometry(curve, 28, p.width * 0.45, 6, false);
       return {
         id: p.id,
         geometry,
@@ -112,10 +121,8 @@ export const MiniaturePlanet: React.FC<MiniaturePlanetProps> = ({
     if (!planetRef.current) return;
 
     if (!isUserDragging && !isEntering) {
-      // Natural continuous rotation
       planetRef.current.rotation.y += spinVelocity.current * delta;
-      // Damping any leftover drag velocity back to default
-      spinVelocity.current = THREE.MathUtils.lerp(spinVelocity.current, 0.07, delta * 0.8);
+      spinVelocity.current = THREE.MathUtils.lerp(spinVelocity.current, 0.065, delta * 0.8);
     }
   });
 
@@ -131,7 +138,7 @@ export const MiniaturePlanet: React.FC<MiniaturePlanetProps> = ({
     const deltaX = e.clientX - previousPointer.current.x;
     previousPointer.current = { x: e.clientX, y: e.clientY };
 
-    planetRef.current.rotation.y += deltaX * 0.006;
+    planetRef.current.rotation.y += deltaX * 0.005;
     spinVelocity.current = deltaX * 0.03;
   };
 
@@ -147,19 +154,19 @@ export const MiniaturePlanet: React.FC<MiniaturePlanetProps> = ({
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerUp}
     >
-      {/* 1. Main Grassy Planet Sphere */}
+      {/* 1. Main Grassy Planet Island */}
       <mesh receiveShadow castShadow>
         <sphereGeometry args={[world.planetRadius, 64, 64]} />
         <meshStandardMaterial
           color="#8cb33e" // lush storybook meadow green
           roughness={0.85}
-          metalness={0.05}
+          metalness={0.04}
           flatShading={false}
         />
       </mesh>
 
-      {/* 2. Rolling Hill Mounds */}
-      {hillMounds.map((hill) => (
+      {/* 2. Canonical Rolling Hill Mounds & Bluffs */}
+      {hillFeatures.map((hill) => (
         <mesh
           key={hill.id}
           position={hill.pos}
@@ -173,29 +180,29 @@ export const MiniaturePlanet: React.FC<MiniaturePlanetProps> = ({
         </mesh>
       ))}
 
-      {/* 3. Water Ponds */}
-      {ponds.map((pond) => (
-        <group key={pond.id} position={pond.pos} quaternion={pond.quat}>
+      {/* 3. Canonical Water Features (Whispering Pond & Azure Lagoon) */}
+      {waterFeatures.map((water) => (
+        <group key={water.id} position={water.pos} quaternion={water.quat}>
           {/* Water Surface */}
           <mesh receiveShadow>
-            <cylinderGeometry args={[pond.radius, pond.radius, 0.05, 16]} />
+            <cylinderGeometry args={[water.radius, water.radius, 0.05, 20]} />
             <meshStandardMaterial
-              color={pond.color}
-              roughness={0.2}
+              color={water.color}
+              roughness={0.15}
               metalness={0.2}
               transparent
               opacity={0.88}
             />
           </mesh>
-          {/* Sandy/Pebble Shore Ring */}
+          {/* Sand & Pebble Shoreline Rim */}
           <mesh receiveShadow position={[0, -0.01, 0]}>
-            <cylinderGeometry args={[pond.radius * 1.15, pond.radius * 1.15, 0.04, 16]} />
+            <cylinderGeometry args={[water.radius * 1.14, water.radius * 1.14, 0.04, 20]} />
             <meshStandardMaterial color="#e0cda9" roughness={0.9} />
           </mesh>
         </group>
       ))}
 
-      {/* 4. Cobblestone Paths */}
+      {/* 4. Canonical Cobblestone Paths & Highways */}
       {pathMeshes.map((path) => path && (
         <mesh key={path.id} geometry={path.geometry} receiveShadow>
           <meshStandardMaterial color={path.color} roughness={0.95} />
