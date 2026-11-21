@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Download } from 'lucide-react';
+import { LetterModal, PortfolioSection } from './components/LetterModal';
+import { WorldNPCBadges } from './components/WorldNPCBadges';
 
 interface MenuItem {
   num: string;
   title: string;
-  id: string;
+  id: PortfolioSection;
 }
 
 const MENU_ITEMS: MenuItem[] = [
@@ -14,6 +16,7 @@ const MENU_ITEMS: MenuItem[] = [
   { num: '04', title: 'PROJECTS', id: 'projects' },
   { num: '05', title: 'SKILLS', id: 'skills' },
   { num: '06', title: 'CONTACT', id: 'contact' },
+  { num: '07', title: 'CV DOCUMENT', id: 'cv' },
 ];
 
 // Ensure default character is a stylish boy preset in localStorage
@@ -46,6 +49,15 @@ export const App: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
+  // Storybook Letter Modal State
+  const [letterState, setLetterState] = useState<{
+    isOpen: boolean;
+    section: PortfolioSection;
+  }>({
+    isOpen: false,
+    section: 'about',
+  });
+
   // Toggle on event from the top-right button
   useEffect(() => {
     const handleToggle = () => {
@@ -56,7 +68,10 @@ export const App: React.FC = () => {
     window.addEventListener('ui_quest_log_toggle', handleToggle);
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsOpen(false);
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+        setLetterState((prev) => ({ ...prev, isOpen: false }));
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
 
@@ -67,15 +82,38 @@ export const App: React.FC = () => {
     };
   }, []);
 
-  // Notify 3D engine so the top-right button morphs into 'X' when open
+  // Notify 3D engine so the top-right button knows state
   useEffect(() => {
     window.dispatchEvent(
       new CustomEvent('portfolio_menu_state_changed', { detail: { isOpen } })
     );
   }, [isOpen]);
 
+  // When clicking an item in the 3-line menu:
+  // Close menu and summon the corresponding NPC to run to the player under 2-3s!
+  const handleMenuItemClick = (sectionId: PortfolioSection) => {
+    setIsOpen(false);
+    window.dispatchEvent(
+      new CustomEvent('summon_portfolio_npc', { detail: { section: sectionId } })
+    );
+  };
+
   return (
     <>
+      {/* 3D World NPC Floating Billboard Badges & Fast Sprint Delivery */}
+      <WorldNPCBadges
+        onOpenLetter={(section) => setLetterState({ isOpen: true, section })}
+      />
+
+      {/* Storybook Letter Modal */}
+      <LetterModal
+        isOpen={letterState.isOpen}
+        section={letterState.section}
+        onClose={() => setLetterState((prev) => ({ ...prev, isOpen: false }))}
+        onSelectSection={(sec) => setLetterState({ isOpen: true, section: sec })}
+      />
+
+      {/* 3-Lines Navigation Menu Popup */}
       {isOpen && (
         <>
           {/* Transparent click-outside dismisser (no darkening/blackout) */}
@@ -112,7 +150,7 @@ export const App: React.FC = () => {
               fontFamily: "'Fredoka', 'Plus Jakarta Sans', sans-serif",
             }}
           >
-            {/* Header: Sticker Tag (No separate X button needed) */}
+            {/* Header: Sticker Tag & Download CV Button */}
             <div
               style={{
                 display: 'flex',
@@ -177,7 +215,7 @@ export const App: React.FC = () => {
               </a>
             </div>
 
-            {/* List of Titles matching hand-drawn website theme */}
+            {/* List of Titles: Clicking any summons the NPC runner! */}
             <nav
               aria-label="Portfolio sections"
               style={{
@@ -193,6 +231,7 @@ export const App: React.FC = () => {
                 return (
                   <div
                     key={item.id}
+                    onClick={() => handleMenuItemClick(item.id)}
                     onMouseEnter={() => setHoveredIdx(index)}
                     onMouseLeave={() => setHoveredIdx(null)}
                     style={{
@@ -232,7 +271,7 @@ export const App: React.FC = () => {
                     <span
                       style={{
                         fontFamily: "'Fredoka', 'Plus Jakarta Sans', sans-serif",
-                        fontSize: '18px',
+                        fontSize: '17px',
                         fontWeight: 700,
                         letterSpacing: '0.03em',
                         color: '#1e252b',
@@ -257,7 +296,7 @@ export const App: React.FC = () => {
         .portfolio-popup-card {
           top: 48px;
           right: 115px;
-          width: 285px;
+          width: 295px;
         }
 
         /* Mobile screens: Positioned right below the top-right button */
@@ -265,7 +304,7 @@ export const App: React.FC = () => {
           .portfolio-popup-card {
             top: 80px;
             right: 16px;
-            width: min(280px, calc(100vw - 32px));
+            width: min(290px, calc(100vw - 32px));
           }
         }
 
