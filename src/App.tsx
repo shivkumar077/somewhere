@@ -43,87 +43,82 @@ export const App: React.FC = () => {
 
   return (
     <>
-      {/* Portfolio Fullscreen / Slide Menu Overlay */}
       {isOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Navigation Menu"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setIsOpen(false);
-          }}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 10000,
-            backgroundColor: 'rgba(10, 14, 23, 0.94)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: 'max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left))',
-            boxSizing: 'border-box',
-            pointerEvents: 'auto',
-            animation: 'menuFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
-            overflowY: 'auto',
-          }}
-        >
-          {/* Menu Wrapper */}
+        <>
+          {/* Transparent click-outside catcher (no darkening/blackout) */}
           <div
+            onClick={() => setIsOpen(false)}
+            aria-hidden="true"
             style={{
-              width: '100%',
-              maxWidth: '820px',
-              display: 'flex',
-              flexDirection: 'column',
-              position: 'relative',
+              position: 'fixed',
+              inset: 0,
+              zIndex: 9998,
+              backgroundColor: 'transparent',
+              pointerEvents: 'auto',
+            }}
+          />
+
+          {/* Compact Pop-up Card */}
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation Menu"
+            className="portfolio-popup-card"
+            style={{
+              position: 'fixed',
+              zIndex: 10000,
+              backgroundColor: 'rgba(12, 16, 25, 0.92)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              borderRadius: '16px',
+              border: '1.5px solid rgba(255, 255, 255, 0.16)',
+              boxShadow: '0 16px 40px rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.25)',
+              padding: '14px 18px 12px 18px',
+              pointerEvents: 'auto',
               boxSizing: 'border-box',
-              padding: 'clamp(8px, 2vw, 24px)',
+              animation: 'popupCardIn 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+              userSelect: 'none',
             }}
           >
-            {/* Header with Title Tag & Close Button */}
+            {/* Header: Tag & Close Button */}
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                paddingBottom: 'clamp(14px, 3vh, 28px)',
-                borderBottom: '1.5px solid rgba(255, 255, 255, 0.15)',
+                paddingBottom: '10px',
+                borderBottom: '1.5px solid rgba(255, 255, 255, 0.12)',
                 marginBottom: '4px',
               }}
             >
-              <div
+              <span
                 style={{
                   fontFamily: "'Chakra Petch', 'Russo One', sans-serif",
-                  fontSize: 'clamp(11px, 2vw, 14px)',
-                  letterSpacing: '0.2em',
-                  fontWeight: 700,
+                  fontSize: '11px',
+                  letterSpacing: '0.16em',
+                  fontWeight: 800,
                   color: '#f4c430',
                   textTransform: 'uppercase',
                 }}
               >
-                // SHIV KUMAR PORTFOLIO
-              </div>
+                // PORTFOLIO
+              </span>
 
-              {/* Close Button */}
               <button
                 onClick={() => setIsOpen(false)}
                 aria-label="Close menu"
                 style={{
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '6px',
+                  color: '#ffffff',
+                  width: '24px',
+                  height: '24px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                  border: '1.5px solid rgba(255, 255, 255, 0.25)',
-                  borderRadius: '10px',
-                  color: '#ffffff',
-                  padding: '8px 14px',
-                  fontFamily: "'Chakra Petch', sans-serif",
-                  fontWeight: 700,
-                  fontSize: 'clamp(12px, 2vw, 14px)',
-                  letterSpacing: '0.08em',
+                  justifyContent: 'center',
                   cursor: 'pointer',
+                  padding: 0,
                   transition: 'all 0.15s ease',
                 }}
                 onMouseEnter={(e) => {
@@ -134,15 +129,14 @@ export const App: React.FC = () => {
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
                   e.currentTarget.style.color = '#ffffff';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
                 }}
               >
-                <span>CLOSE</span>
-                <X size={16} />
+                <X size={14} />
               </button>
             </div>
 
-            {/* List of Titles matching reference image */}
+            {/* List of Titles */}
             <nav
               aria-label="Portfolio sections"
               style={{
@@ -153,6 +147,7 @@ export const App: React.FC = () => {
             >
               {MENU_ITEMS.map((item, index) => {
                 const isHovered = hoveredIdx === index;
+                const isLast = index === MENU_ITEMS.length - 1;
                 return (
                   <div
                     key={item.id}
@@ -161,41 +156,40 @@ export const App: React.FC = () => {
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      padding: 'clamp(14px, 2.8vh, 26px) 0',
-                      borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
+                      padding: '9px 4px',
+                      borderBottom: isLast ? 'none' : '1px solid rgba(255, 255, 255, 0.08)',
                       cursor: 'pointer',
-                      transition: 'transform 0.18s ease, padding 0.18s ease',
-                      transform: isHovered ? 'translateX(10px)' : 'translateX(0px)',
-                      userSelect: 'none',
+                      transition: 'transform 0.15s ease',
+                      transform: isHovered ? 'translateX(5px)' : 'translateX(0)',
                     }}
                   >
-                    {/* Number Prefix (01, 02, ...) */}
+                    {/* Number Prefix (01, 02...) */}
                     <span
                       style={{
-                        fontFamily: "'Chakra Petch', 'Plus Jakarta Sans', monospace",
-                        fontSize: 'clamp(12px, 1.8vw, 17px)',
+                        fontFamily: "'Chakra Petch', monospace",
+                        fontSize: '11px',
                         fontWeight: 700,
-                        letterSpacing: '0.12em',
+                        letterSpacing: '0.1em',
                         color: isHovered ? '#f4c430' : 'rgba(165, 176, 195, 0.75)',
-                        marginRight: 'clamp(16px, 3.5vw, 36px)',
-                        minWidth: 'clamp(24px, 3vw, 36px)',
-                        transition: 'color 0.18s ease',
+                        marginRight: '14px',
+                        minWidth: '22px',
+                        transition: 'color 0.15s ease',
                       }}
                     >
                       {item.num}
                     </span>
 
-                    {/* Main Title (ABOUT, EDUCATION, ...) */}
+                    {/* Main Title */}
                     <span
                       style={{
                         fontFamily: "'Chakra Petch', 'Fredoka', 'Plus Jakarta Sans', sans-serif",
-                        fontSize: 'clamp(26px, 6vw, 56px)',
-                        fontWeight: 900,
+                        fontSize: '17px',
+                        fontWeight: 800,
                         letterSpacing: '0.04em',
                         color: isHovered ? '#f4c430' : '#ffffff',
                         lineHeight: 1.1,
                         textTransform: 'uppercase',
-                        transition: 'color 0.18s ease',
+                        transition: 'color 0.15s ease',
                       }}
                     >
                       {item.title}
@@ -205,19 +199,35 @@ export const App: React.FC = () => {
               })}
             </nav>
           </div>
-        </div>
+        </>
       )}
 
-      {/* Global CSS animation */}
+      {/* Responsive Placement & Animations */}
       <style>{`
-        @keyframes menuFadeIn {
+        /* Desktop & Tablet: Anchored to the left of the side button */
+        .portfolio-popup-card {
+          top: 48px;
+          right: 110px;
+          width: 290px;
+        }
+
+        /* Mobile screens: Positioned below the top-right button */
+        @media (max-width: 639px) {
+          .portfolio-popup-card {
+            top: 80px;
+            right: 16px;
+            width: min(280px, calc(100vw - 32px));
+          }
+        }
+
+        @keyframes popupCardIn {
           from {
             opacity: 0;
-            transform: scale(0.98);
+            transform: scale(0.94) translateY(-6px);
           }
           to {
             opacity: 1;
-            transform: scale(1);
+            transform: scale(1) translateY(0);
           }
         }
       `}</style>
