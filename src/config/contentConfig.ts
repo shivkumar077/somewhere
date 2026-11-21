@@ -14,7 +14,7 @@ export interface ContentConfig {
 }
 
 export const CONTENT_CONFIG: ContentConfig = {
-  siteTitle: 'Somewhere',
+  siteTitle: 'Shiv Kumar | Portfolio',
   tagline: '',
   welcomeLines: [
     'HELLO',

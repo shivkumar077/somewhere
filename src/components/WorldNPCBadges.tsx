@@ -127,6 +127,25 @@ interface WorldNPCBadgesProps {
 
 export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) => {
   const [badges, setBadges] = useState<ScreenBadge[]>([]);
+  const [isDialogueOpen, setIsDialogueOpen] = useState(false);
+
+  useEffect(() => {
+    const onDialogShow = () => setIsDialogueOpen(true);
+    const onDialogHide = () => setIsDialogueOpen(false);
+
+    window.addEventListener('npc_dialog_shown', onDialogShow);
+    window.addEventListener('npc_dialog_hidden', onDialogHide);
+    window.addEventListener('npc_dialog_finished', onDialogHide);
+    window.addEventListener('npc_force_close_dialog', onDialogHide);
+
+    return () => {
+      window.removeEventListener('npc_dialog_shown', onDialogShow);
+      window.removeEventListener('npc_dialog_hidden', onDialogHide);
+      window.removeEventListener('npc_dialog_finished', onDialogHide);
+      window.removeEventListener('npc_force_close_dialog', onDialogHide);
+    };
+  }, []);
+
   const [deliveryToast, setDeliveryToast] = useState<{
     text: string;
     sub: string;
@@ -536,6 +555,8 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
     animId = requestAnimationFrame(updateLoop);
     return () => cancelAnimationFrame(animId);
   }, []);
+
+  if (isDialogueOpen) return null;
 
   return (
     <>
