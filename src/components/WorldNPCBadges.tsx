@@ -85,12 +85,12 @@ const NPC_CONFIGS: NPCConfig[] = [
     color: '#de794e',
   },
   {
-    id: 'suto',
+    id: 'fox',
     section: 'cv',
     label: 'CV DOCUMENT',
     name: 'Suto the Cat',
     icon: '🐱',
-    fallbackPos: [15.8793, 16.9006, 11.2543],
+    fallbackPos: [-8.36976, -20.368, 10.0339],
     color: '#ff85a2',
   },
 ];
@@ -114,7 +114,6 @@ interface ScreenBadge {
   distance: number;
   isClose: boolean;
   visible: boolean;
-  lod: 'close' | 'medium' | 'far';
 }
 
 interface ActiveSprint {
@@ -153,16 +152,16 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
       '/assets/toon_cat_free.glb',
       (gltf) => {
         const catModel = gltf.scene;
-        // Scale to clearly visible cute cat proportions (~0.85m tall)
-        catModel.scale.set(0.26, 0.26, 0.26);
-        // Face forward along Z
-        catModel.rotation.y = Math.PI;
+        // Scale to clearly visible cute cat proportions
+        catModel.scale.set(0.38, 0.38, 0.38);
+        catModel.rotation.y = 0;
 
         // Apply hand-drawn cel-shaded art style matching the website
         catModel.traverse((child: any) => {
           if (child.isMesh) {
             child.castShadow = true;
             child.receiveShadow = true;
+            child.frustumCulled = false;
             if (child.geometry) {
               if (!child.geometry.updateRanges) child.geometry.updateRanges = [];
               if (child.geometry.attributes) {
@@ -175,7 +174,7 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
             if (oldMap && !oldMap.updateRanges) oldMap.updateRanges = [];
             child.material = new THREE.MeshToonMaterial({
               map: oldMap || null,
-              color: 0xfff3e6, // cute warm cream/calico coat
+              color: 0xffffff,
             });
             if (child.material.map && !child.material.map.updateRanges) {
               child.material.map.updateRanges = [];
@@ -185,7 +184,11 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
 
         const wrapper = new THREE.Group();
         wrapper.name = 'suto_cat_courier';
-        wrapper.position.set(15.8793, 16.9006, 11.2543);
+        const defaultFoxPos = new THREE.Vector3(-8.36976, -20.368, 10.0339);
+        const up = defaultFoxPos.clone().normalize();
+        wrapper.position.copy(defaultFoxPos);
+        wrapper.up.copy(up);
+        wrapper.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), up);
         wrapper.add(catModel);
         wrapper.visible = true; // Always visible in world!
 
@@ -503,7 +506,7 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
               sprint.npcMesh.lookAt(playerObj.position.x, playerObj.position.y, playerObj.position.z);
             }
 
-            const isCat = sprint.npcId === 'suto' || sprint.section === 'cv';
+            const isCat = sprint.npcId === 'fox' || sprint.npcId === 'suto' || sprint.section === 'cv';
             setDeliveryToast({
               text: isCat ? `🐱 CV Delivered by Suto!` : `✉ Letter Handed to You!`,
               sub: isCat
@@ -535,6 +538,21 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
       if (scene && catRef.current) {
         if (catRef.current.wrapper.parent !== scene) {
           scene.add(catRef.current.wrapper);
+        }
+        // Permanently hide the sleeping fox model from App3D so only our 3D cat Suto is active
+        if (scene.npcs) {
+          const fox = scene.npcs.find((n: any) => n.options?.id === 'fox');
+          if (fox && fox.mesh) {
+            fox.mesh.visible = false;
+            // If Suto is not sprinting, keep him stationed at the fox's spot on the planet ground
+            if (!activeSprintRef.current && fox.mesh.position) {
+              const fPos = fox.mesh.position;
+              const fUp = fPos.clone().normalize();
+              catRef.current.wrapper.position.copy(fPos);
+              catRef.current.wrapper.up.copy(fUp);
+              catRef.current.wrapper.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), fUp);
+            }
+          }
         }
         if (catRef.current.mixer) {
           catRef.current.mixer.update(0.018);
@@ -571,7 +589,7 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
             let worldY = cfg.fallbackPos[1];
             let worldZ = cfg.fallbackPos[2];
 
-            if (cfg.id === 'suto') {
+            if (cfg.id === 'fox' || cfg.id === 'suto') {
               if (catRef.current && catRef.current.wrapper) {
                 worldX = catRef.current.wrapper.position.x;
                 worldY = catRef.current.wrapper.position.y;
@@ -586,7 +604,7 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
               }
             }
 
-            const headY = cfg.id === 'suto' ? worldY + 0.95 : cfg.id === 'fox' ? worldY + 1.15 : worldY + 1.85;
+            const headY = (cfg.id === 'suto' || cfg.id === 'fox') ? worldY + 1.25 : worldY + 1.85;
 
             let dist = 100;
             if (playerPos) {
@@ -596,22 +614,10 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
             const v = new Vec3(worldX, headY, worldZ);
             v.project(camera);
 
-            const isSprinting = activeSprintRef.current?.npcId === cfg.id;
-            // Progressive LOD culling: faraway badges over planet horizon (>24m) are culled for 60 FPS
-            const visible = v.z < 1.0 && v.z > -1.0 && (dist < 24 || isSprinting);
+            // Fully visible from everywhere on the planet from the start!
+            const visible = v.z < 1.0 && v.z > -1.0;
             const screenX = (v.x * 0.5 + 0.5) * width;
             const screenY = (-(v.y * 0.5) + 0.5) * height;
-
-            // Level of Detail (LOD):
-            // - 'close': within 3.8m or sprinting -> full interactive comic banner with 'PRESS E / CLICK'
-            // - 'medium': 3.8m to 14m -> clean compact title badge with icon
-            // - 'far': 14m to 24m -> lightweight mini comic pin dot
-            let lod: 'close' | 'medium' | 'far' = 'medium';
-            if (dist < 3.8 || isSprinting) {
-              lod = 'close';
-            } else if (dist >= 14) {
-              lod = 'far';
-            }
 
             updatedBadges.push({
               id: cfg.id,
@@ -623,9 +629,8 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
               screenX,
               screenY,
               distance: dist,
-              isClose: dist < 3.2,
+              isClose: dist < 3.5,
               visible,
-              lod,
             });
           });
 
@@ -687,100 +692,73 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
                 zIndex: isRunner ? 9995 : 9990,
               }}
             >
-              {/* Level of Detail (LOD) Rendering */}
-              {b.lod === 'far' ? (
-                /* Far LOD (14m - 24m): Ultra-lightweight comic pin dot for 60fps */
-                <div
-                  title={`${b.label} - ${b.name}`}
-                  style={{
-                    width: '26px',
-                    height: '26px',
-                    borderRadius: '50%',
-                    backgroundColor: '#fffef9',
-                    border: '2px solid #1e252b',
-                    boxShadow: '1.5px 1.5px 0px #1e252b',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '13px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {b.icon}
-                </div>
-              ) : (
-                /* Medium & Close LOD: Hand-Drawn Comic Storybook Banner */
-                <>
-                  <div
+              {/* Hand-Drawn Comic Storybook Banner */}
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  backgroundColor: isRunner ? '#f4c430' : b.isClose ? '#f4c430' : '#fffef9',
+                  color: '#1e252b',
+                  border: '2.5px solid #1e252b',
+                  borderRadius: '12px',
+                  padding: b.isClose || isRunner ? '5px 12px' : '4px 10px',
+                  boxShadow: '2.5px 2.5px 0px #1e252b',
+                  fontFamily: "'Fredoka', sans-serif",
+                  fontSize: b.isClose || isRunner ? '13px' : '11.5px',
+                  fontWeight: 700,
+                  letterSpacing: '0.04em',
+                  whiteSpace: 'nowrap',
+                  animation: b.isClose || isRunner ? 'badgePulse 1.2s infinite' : 'none',
+                }}
+              >
+                <span style={{ fontSize: '14px' }}>{isRunner ? (b.id === 'fox' || b.id === 'suto' ? '🐱' : '🏃') : b.icon}</span>
+                <span>{isRunner ? (b.id === 'fox' || b.id === 'suto' ? 'SUTO DELIVERING CV' : `DELIVERING ${b.label}`) : b.label}</span>
+                {b.isClose && !isRunner && (
+                  <span
                     style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                      backgroundColor: isRunner ? '#f4c430' : b.isClose ? '#f4c430' : '#fffef9',
-                      color: '#1e252b',
-                      border: '2.5px solid #1e252b',
-                      borderRadius: '12px',
-                      padding: b.isClose || isRunner ? '4px 11px' : '3px 8px',
-                      boxShadow: '2.5px 2.5px 0px #1e252b',
-                      fontFamily: "'Fredoka', sans-serif",
-                      fontSize: b.isClose || isRunner ? '12.5px' : '11px',
-                      fontWeight: 700,
-                      letterSpacing: '0.04em',
-                      whiteSpace: 'nowrap',
-                      animation: b.isClose || isRunner ? 'badgePulse 1.2s infinite' : 'none',
+                      backgroundColor: '#1e252b',
+                      color: '#ffffff',
+                      borderRadius: '6px',
+                      padding: '1px 6px',
+                      fontSize: '10px',
+                      fontWeight: 800,
+                      marginLeft: '4px',
                     }}
                   >
-                    <span style={{ fontSize: '14px' }}>{isRunner ? (b.id === 'fox' || b.id === 'suto' ? '🐱' : '🏃') : b.icon}</span>
-                    <span>{isRunner ? (b.id === 'fox' || b.id === 'suto' ? 'SUTO DELIVERING CV' : `DELIVERING ${b.label}`) : b.label}</span>
-                    {b.isClose && !isRunner && (
-                      <span
-                        style={{
-                          backgroundColor: '#1e252b',
-                          color: '#ffffff',
-                          borderRadius: '6px',
-                          padding: '1px 5px',
-                          fontSize: '10px',
-                          fontWeight: 800,
-                          marginLeft: '3px',
-                        }}
-                      >
-                        PRESS E / CLICK
-                      </span>
-                    )}
-                  </div>
+                    PRESS E / CLICK
+                  </span>
+                )}
+              </div>
 
-                  {/* Character Identity Tag (shown when close or sprinting) */}
-                  {b.lod === 'close' && (
-                    <span
-                      style={{
-                        fontSize: '10.5px',
-                        fontWeight: 700,
-                        color: '#ffffff',
-                        textShadow: '0 1px 3px rgba(0,0,0,0.8), 0 0 2px #000',
-                        marginTop: '2px',
-                        backgroundColor: (b.id === 'fox' || b.id === 'suto') && isRunner ? 'rgba(235, 94, 140, 0.95)' : isRunner ? 'rgba(217, 83, 79, 0.9)' : 'rgba(30, 37, 43, 0.65)',
-                        padding: '1.5px 7px',
-                        borderRadius: '6px',
-                        border: '1px solid rgba(255,255,255,0.3)',
-                      }}
-                    >
-                      {b.id === 'fox' || b.id === 'suto' ? '🐾 Suto the Cat' : b.name}
-                    </span>
-                  )}
+              {/* Character Identity Tag */}
+              <span
+                style={{
+                  fontSize: '10.5px',
+                  fontWeight: 700,
+                  color: '#ffffff',
+                  textShadow: '0 1px 3px rgba(0,0,0,0.8), 0 0 2px #000',
+                  marginTop: '2px',
+                  backgroundColor: (b.id === 'fox' || b.id === 'suto') && isRunner ? 'rgba(235, 94, 140, 0.95)' : isRunner ? 'rgba(217, 83, 79, 0.9)' : 'rgba(30, 37, 43, 0.7)',
+                  padding: '1.5px 7px',
+                  borderRadius: '6px',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                }}
+              >
+                {b.id === 'fox' || b.id === 'suto' ? '🐾 Suto the Cat' : b.name}
+              </span>
 
-                  {/* Pointer Arrow */}
-                  <div
-                    style={{
-                      width: 0,
-                      height: 0,
-                      borderLeft: '5px solid transparent',
-                      borderRight: '5px solid transparent',
-                      borderTop: '5px solid #1e252b',
-                      marginTop: '1px',
-                    }}
-                  />
-                </>
-              )}
+              {/* Pointer Arrow */}
+              <div
+                style={{
+                  width: 0,
+                  height: 0,
+                  borderLeft: '5px solid transparent',
+                  borderRight: '5px solid transparent',
+                  borderTop: '5px solid #1e252b',
+                  marginTop: '1px',
+                }}
+              />
             </div>
           );
         })}
