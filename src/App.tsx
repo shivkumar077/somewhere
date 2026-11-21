@@ -58,6 +58,21 @@ export const App: React.FC = () => {
     section: 'about',
   });
 
+  // Immediate smooth unlock when closing letter modal
+  const handleCloseLetter = () => {
+    setLetterState((prev) => ({ ...prev, isOpen: false }));
+    window.dispatchEvent(new CustomEvent('portfolio_modal_closed'));
+    try {
+      const chars = (window as any)._characters;
+      if (chars) {
+        if (chars.mesh) chars.mesh.interactingElement = null;
+        if (typeof chars.unlockCamera === 'function') chars.unlockCamera();
+        if (typeof chars.enable === 'function') chars.enable();
+      }
+      (window as any)._sprintActive = false;
+    } catch (e) {}
+  };
+
   // Toggle on event from the top-right button
   useEffect(() => {
     const handleToggle = () => {
@@ -70,7 +85,7 @@ export const App: React.FC = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setIsOpen(false);
-        setLetterState((prev) => ({ ...prev, isOpen: false }));
+        handleCloseLetter();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -109,7 +124,7 @@ export const App: React.FC = () => {
       <LetterModal
         isOpen={letterState.isOpen}
         section={letterState.section}
-        onClose={() => setLetterState((prev) => ({ ...prev, isOpen: false }))}
+        onClose={handleCloseLetter}
         onSelectSection={(sec) => setLetterState({ isOpen: true, section: sec })}
       />
 

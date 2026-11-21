@@ -152,8 +152,8 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
       '/assets/toon_cat_free.glb',
       (gltf) => {
         const catModel = gltf.scene;
-        // Scale to cute cat proportions (~0.55m tall)
-        catModel.scale.set(0.16, 0.16, 0.16);
+        // Scale to clearly visible cute cat proportions (~0.85m tall)
+        catModel.scale.set(0.26, 0.26, 0.26);
         // Face forward along Z
         catModel.rotation.y = Math.PI;
 
@@ -172,14 +172,15 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
 
         const wrapper = new THREE.Group();
         wrapper.name = 'suto_cat_courier';
+        wrapper.position.set(15.8793, 16.9006, 11.2543);
         wrapper.add(catModel);
-        wrapper.visible = false;
+        wrapper.visible = true; // Always visible in world!
 
         const mixer = new THREE.AnimationMixer(catModel);
         let action: any = null;
         if (gltf.animations && gltf.animations.length > 0) {
           action = mixer.clipAction(gltf.animations[0]);
-          action.setEffectiveTimeScale(1.4); // bouncy, cute energetic cat trot/run!
+          action.setEffectiveTimeScale(1.3); // bouncy, cute energetic cat trot/run!
           action.play();
         }
 
@@ -217,7 +218,7 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
     onOpenLetter(section);
   };
 
-  // Listen for summon and open events
+  // Listen for summon, open, and modal close events
   useEffect(() => {
     const handleSummon = (e: any) => {
       const section = (e.detail?.section || 'about').toLowerCase() as PortfolioSection;
@@ -231,12 +232,46 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
       onOpenLetter(sec);
     };
 
+    const handleModalClosed = () => {
+      // Instantly release sprint lock and unlock character controls
+      (window as any)._sprintActive = false;
+      try {
+        const chars = (window as any)._characters;
+        if (chars) {
+          if (chars.mesh) chars.mesh.interactingElement = null;
+          if (typeof chars.unlockCamera === 'function') chars.unlockCamera();
+          if (typeof chars.enable === 'function') chars.enable();
+        }
+      } catch (err) {}
+
+      // Keep Suto sitting happily with the player for 10s after closing so user clearly sees Suto!
+      setTimeout(() => {
+        if (activeSprintRef.current) {
+          const s = activeSprintRef.current;
+          if (s.npcId === 'suto' && catRef.current) {
+            // Suto gently returns to his home station
+            catRef.current.wrapper.position.set(15.8793, 16.9006, 11.2543);
+            catRef.current.wrapper.visible = true;
+          } else if (s.originalPos && s.npcMesh) {
+            s.npcMesh.position.set(s.originalPos.x, s.originalPos.y, s.originalPos.z);
+            if (s.npcMesh._targetPosition) {
+              s.npcMesh._targetPosition.set(s.originalPos.x, s.originalPos.y, s.originalPos.z);
+            }
+            s.npcMesh._visibilityThreshold = 35;
+          }
+          activeSprintRef.current = null;
+        }
+      }, 10000);
+    };
+
     window.addEventListener('summon_portfolio_npc', handleSummon);
     window.addEventListener('open_portfolio_letter', handleOpenLetterEvent);
+    window.addEventListener('portfolio_modal_closed', handleModalClosed);
 
     return () => {
       window.removeEventListener('summon_portfolio_npc', handleSummon);
       window.removeEventListener('open_portfolio_letter', handleOpenLetterEvent);
+      window.removeEventListener('portfolio_modal_closed', handleModalClosed);
     };
   }, []);
 
@@ -315,13 +350,14 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
       return pt;
     };
 
-    // Spawn 14 units ahead in clear line-of-sight in front of the camera & player
-    const spawnDist = 14;
+    // Spawn in direct line-of-sight in front of the camera & player
+    const isCat = section === 'cv';
+    const spawnDist = isCat ? 6.5 : 10.0;
     const rawSpawn = vAdd(pPos, vMul(forwardTangent, spawnDist));
     const spawnPoint = snapToGround(vMul(vNorm(rawSpawn), planetRadius));
 
-    // Stop 1.4 units right in front of the player
-    const rawTarget = vAdd(pPos, vMul(forwardTangent, 1.4));
+    // Stop 1.3 units right in front of the player
+    const rawTarget = vAdd(pPos, vMul(forwardTangent, 1.3));
     const targetPoint = snapToGround(vMul(vNorm(rawTarget), planetRadius));
 
     if (npcMesh) {
@@ -349,7 +385,7 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
         section: section,
         npcName: config.name,
         startTime: performance.now(),
-        duration: 4000, // 4.0 seconds: clearly visible running across the ground!
+        duration: isCat ? 2200 : 3200,
         spawnPoint,
         targetPoint,
         planetRadius,
@@ -454,7 +490,7 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
               sprint.npcMesh.lookAt(playerObj.position.x, playerObj.position.y, playerObj.position.z);
             }
 
-            const isCat = sprint.npcId === 'fox' || sprint.section === 'cv';
+            const isCat = sprint.npcId === 'suto' || sprint.section === 'cv';
             setDeliveryToast({
               text: isCat ? `🐱 CV Delivered by Suto!` : `✉ Letter Handed to You!`,
               sub: isCat
@@ -463,34 +499,12 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
               distance: 'Delivered',
             });
 
-            // Hand-off pause: let the user see the character standing in front of them with the letter!
+            // Hand-off pause: let the user see Suto standing right in front of them with the letter!
             setTimeout(() => {
               (window as any)._sprintActive = false;
               onOpenLetter(sprint.section);
               setDeliveryToast(null);
-
-              // Reset NPC to their scenic world station after 8 seconds
-              setTimeout(() => {
-                if (sprint.npcId === 'suto' && catRef.current) {
-                  catRef.current.wrapper.visible = false;
-                } else if (sprint.originalPos && sprint.npcMesh) {
-                  sprint.npcMesh.position.set(
-                    sprint.originalPos.x,
-                    sprint.originalPos.y,
-                    sprint.originalPos.z
-                  );
-                  if (sprint.npcMesh._targetPosition) {
-                    sprint.npcMesh._targetPosition.set(
-                      sprint.originalPos.x,
-                      sprint.originalPos.y,
-                      sprint.originalPos.z
-                    );
-                  }
-                  sprint.npcMesh._visibilityThreshold = 35;
-                }
-                activeSprintRef.current = null;
-              }, 8000);
-            }, 750);
+            }, 1000);
           }
         } else if (sprint.stage === 'handing') {
           // Keep NPC stationary right in front of player facing them during hand-off
@@ -501,6 +515,16 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
           if (typeof sprint.npcMesh.lookAt === 'function') {
             sprint.npcMesh.lookAt(playerObj.position.x, playerObj.position.y, playerObj.position.z);
           }
+        }
+      }
+
+      // Ensure Suto is permanently added to scene and animated
+      if (scene && catRef.current) {
+        if (catRef.current.wrapper.parent !== scene) {
+          scene.add(catRef.current.wrapper);
+        }
+        if (catRef.current.mixer) {
+          catRef.current.mixer.update(0.018);
         }
       }
 
@@ -520,12 +544,10 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
             let worldZ = cfg.fallbackPos[2];
 
             if (cfg.id === 'suto') {
-              if (catRef.current && catRef.current.wrapper.visible) {
+              if (catRef.current && catRef.current.wrapper) {
                 worldX = catRef.current.wrapper.position.x;
                 worldY = catRef.current.wrapper.position.y;
                 worldZ = catRef.current.wrapper.position.z;
-              } else {
-                return; // Hide badge if Suto is not summoned
               }
             } else if (scene && scene.npcs) {
               const entry = scene.npcs.find((n: any) => n.options?.id === cfg.id);
@@ -536,7 +558,7 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
               }
             }
 
-            const headY = cfg.id === 'suto' ? worldY + 0.65 : cfg.id === 'fox' ? worldY + 1.15 : worldY + 1.85;
+            const headY = cfg.id === 'suto' ? worldY + 0.95 : cfg.id === 'fox' ? worldY + 1.15 : worldY + 1.85;
 
             let dist = 100;
             if (playerPos) {
