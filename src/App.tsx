@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
 
 interface MenuItem {
   num: string;
@@ -20,7 +19,7 @@ export const App: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
-  // Toggle on event from the top-right 3-line button
+  // Toggle on event from the top-right button
   useEffect(() => {
     const handleToggle = () => {
       setIsOpen((prev) => !prev);
@@ -41,11 +40,18 @@ export const App: React.FC = () => {
     };
   }, []);
 
+  // Notify 3D engine so the top-right button morphs into 'X' when open
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent('portfolio_menu_state_changed', { detail: { isOpen } })
+    );
+  }, [isOpen]);
+
   return (
     <>
       {isOpen && (
         <>
-          {/* Transparent click-outside catcher (no darkening/blackout) */}
+          {/* Transparent click-outside dismisser (no darkening/blackout) */}
           <div
             onClick={() => setIsOpen(false)}
             aria-hidden="true"
@@ -58,7 +64,7 @@ export const App: React.FC = () => {
             }}
           />
 
-          {/* Compact Pop-up Card */}
+          {/* Hand-drawn Storybook Pop-up Card */}
           <div
             role="dialog"
             aria-modal="true"
@@ -67,82 +73,66 @@ export const App: React.FC = () => {
             style={{
               position: 'fixed',
               zIndex: 10000,
-              backgroundColor: 'rgba(12, 16, 25, 0.92)',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-              borderRadius: '16px',
-              border: '1.5px solid rgba(255, 255, 255, 0.16)',
-              boxShadow: '0 16px 40px rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.25)',
-              padding: '14px 18px 12px 18px',
+              backgroundColor: '#fffef9',
+              borderRadius: '18px',
+              border: '3px solid #1e252b',
+              boxShadow: '5px 5px 0px #1e252b',
+              padding: '14px 16px 12px 16px',
               pointerEvents: 'auto',
               boxSizing: 'border-box',
               animation: 'popupCardIn 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
               userSelect: 'none',
+              fontFamily: "'Fredoka', 'Plus Jakarta Sans', sans-serif",
             }}
           >
-            {/* Header: Tag & Close Button */}
+            {/* Header: Sticker Tag (No separate X button needed) */}
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 paddingBottom: '10px',
-                borderBottom: '1.5px solid rgba(255, 255, 255, 0.12)',
+                borderBottom: '2px dashed rgba(30, 37, 43, 0.2)',
                 marginBottom: '4px',
               }}
             >
               <span
                 style={{
-                  fontFamily: "'Chakra Petch', 'Russo One', sans-serif",
-                  fontSize: '11px',
-                  letterSpacing: '0.16em',
-                  fontWeight: 800,
-                  color: '#f4c430',
+                  backgroundColor: '#f4c430',
+                  color: '#1e252b',
+                  border: '1.5px solid #1e252b',
+                  borderRadius: '8px',
+                  padding: '3px 10px',
+                  fontSize: '11.5px',
+                  fontWeight: 700,
+                  letterSpacing: '0.08em',
                   textTransform: 'uppercase',
+                  boxShadow: '1.5px 1.5px 0px #1e252b',
                 }}
               >
-                // PORTFOLIO
+                ✦ PORTFOLIO
               </span>
 
-              <button
-                onClick={() => setIsOpen(false)}
-                aria-label="Close menu"
+              <span
                 style={{
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '6px',
-                  color: '#ffffff',
-                  width: '24px',
-                  height: '24px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  padding: 0,
-                  transition: 'all 0.15s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#f4c430';
-                  e.currentTarget.style.color = '#10141d';
-                  e.currentTarget.style.borderColor = '#f4c430';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
-                  e.currentTarget.style.color = '#ffffff';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: '#848d97',
+                  letterSpacing: '0.04em',
                 }}
               >
-                <X size={14} />
-              </button>
+                SELECT SECTION
+              </span>
             </div>
 
-            {/* List of Titles */}
+            {/* List of Titles matching hand-drawn website theme */}
             <nav
               aria-label="Portfolio sections"
               style={{
                 display: 'flex',
                 flexDirection: 'column',
                 width: '100%',
+                gap: '2px',
               }}
             >
               {MENU_ITEMS.map((item, index) => {
@@ -156,24 +146,31 @@ export const App: React.FC = () => {
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      padding: '9px 4px',
-                      borderBottom: isLast ? 'none' : '1px solid rgba(255, 255, 255, 0.08)',
+                      padding: '8px 8px',
+                      borderRadius: '10px',
+                      backgroundColor: isHovered ? '#fbf4df' : 'transparent',
+                      borderBottom: isLast ? 'none' : '1.5px dashed rgba(30, 37, 43, 0.12)',
                       cursor: 'pointer',
-                      transition: 'transform 0.15s ease',
+                      transition: 'all 0.15s ease',
                       transform: isHovered ? 'translateX(5px)' : 'translateX(0)',
                     }}
                   >
-                    {/* Number Prefix (01, 02...) */}
+                    {/* Number Badge */}
                     <span
                       style={{
-                        fontFamily: "'Chakra Petch', monospace",
+                        backgroundColor: isHovered ? '#f4c430' : '#f2ebd9',
+                        color: '#1e252b',
+                        border: '1.5px solid #1e252b',
+                        borderRadius: '6px',
+                        padding: '2px 6px',
+                        fontFamily: "'Chakra Petch', sans-serif",
                         fontSize: '11px',
-                        fontWeight: 700,
-                        letterSpacing: '0.1em',
-                        color: isHovered ? '#f4c430' : 'rgba(165, 176, 195, 0.75)',
-                        marginRight: '14px',
+                        fontWeight: 800,
+                        letterSpacing: '0.04em',
+                        marginRight: '12px',
                         minWidth: '22px',
-                        transition: 'color 0.15s ease',
+                        textAlign: 'center',
+                        transition: 'background-color 0.15s ease',
                       }}
                     >
                       {item.num}
@@ -182,12 +179,12 @@ export const App: React.FC = () => {
                     {/* Main Title */}
                     <span
                       style={{
-                        fontFamily: "'Chakra Petch', 'Fredoka', 'Plus Jakarta Sans', sans-serif",
-                        fontSize: '17px',
-                        fontWeight: 800,
-                        letterSpacing: '0.04em',
-                        color: isHovered ? '#f4c430' : '#ffffff',
-                        lineHeight: 1.1,
+                        fontFamily: "'Fredoka', 'Plus Jakarta Sans', sans-serif",
+                        fontSize: '18px',
+                        fontWeight: 700,
+                        letterSpacing: '0.03em',
+                        color: '#1e252b',
+                        lineHeight: 1.15,
                         textTransform: 'uppercase',
                         transition: 'color 0.15s ease',
                       }}
@@ -204,14 +201,14 @@ export const App: React.FC = () => {
 
       {/* Responsive Placement & Animations */}
       <style>{`
-        /* Desktop & Tablet: Anchored to the left of the side button */
+        /* Desktop & Tablet: Anchored to the left of the top-right button */
         .portfolio-popup-card {
           top: 48px;
-          right: 110px;
-          width: 290px;
+          right: 115px;
+          width: 285px;
         }
 
-        /* Mobile screens: Positioned below the top-right button */
+        /* Mobile screens: Positioned right below the top-right button */
         @media (max-width: 639px) {
           .portfolio-popup-card {
             top: 80px;
