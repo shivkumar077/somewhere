@@ -139,6 +139,13 @@ export const App: React.FC = () => {
     [navigateToDestination]
   );
 
+  const handleGroundClick = useCallback(
+    (point: [number, number, number]) => {
+      setMoveTarget(point[0], point[2]);
+    },
+    [setMoveTarget]
+  );
+
   const formattedTime = useMemo(() => {
     return currentDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }, [currentDate]);
@@ -179,7 +186,7 @@ export const App: React.FC = () => {
         onSetMode={handleSetMode}
       />
 
-      {/* 3. 3D Scene Canvas — Continuous Painterly Anime World */}
+      {/* 3. 3D Scene Canvas — Continuous Cel-Shaded Messenger-Style World */}
       <SceneCanvas
         world={CANONICAL_WORLD}
         atmosphere={currentAtmosphere}
@@ -190,7 +197,7 @@ export const App: React.FC = () => {
         playerRotation={playerRotation}
         isWalking={isWalking}
         targetPoint={targetPoint}
-        onGroundClick={setMoveTarget}
+        onGroundClick={handleGroundClick}
         onHoverBuilding={setHoveredBuilding}
         onSelectBuilding={setSelectedBuilding}
         onSelectNPC={setSelectedNPC}

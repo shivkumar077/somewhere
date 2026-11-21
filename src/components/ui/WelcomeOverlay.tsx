@@ -4,7 +4,7 @@ import { CONTENT_CONFIG } from '../../config/contentConfig';
 import { BuildingItem } from '../../world/types';
 import { ArrowRight, MapPin } from 'lucide-react';
 import { useResponsive } from '../../hooks/useResponsive';
-import { ANIME_PALETTE } from '../../styles/painterlyPalette';
+import { MESSENGER_PALETTE } from '../../styles/messengerPalette';
 
 interface WelcomeOverlayProps {
   isEntered: boolean;
@@ -27,7 +27,7 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const { isShortLandscape, isSmallMobile } = useResponsive();
 
-  // Cinematic staggered entrance for the 3-line illustrated anime title
+  // Cinematic staggered entrance for the 3-line block title matching Messenger
   useEffect(() => {
     if (isEntered || isTransitioning) return;
 
@@ -39,14 +39,14 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
 
     gsap.fromTo(
       lines,
-      { y: 32, opacity: 0, scale: 0.92 },
+      { y: 36, opacity: 0, scale: 0.88 },
       {
         y: 0,
         opacity: 1,
         scale: 1,
         duration: 0.9,
-        stagger: 0.15,
-        ease: 'back.out(1.4)',
+        stagger: 0.16,
+        ease: 'back.out(1.5)',
         delay: 0.2,
       }
     );
@@ -54,13 +54,13 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
     if (buttonRef.current) {
       gsap.fromTo(
         buttonRef.current,
-        { scale: 0.88, opacity: 0, y: 15 },
+        { scale: 0.85, opacity: 0, y: 16 },
         {
           scale: 1,
           opacity: 1,
           y: 0,
           duration: 0.75,
-          ease: 'back.out(1.5)',
+          ease: 'back.out(1.6)',
           delay: 0.75,
         }
       );
@@ -89,17 +89,17 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
         overflow: 'hidden',
       }}
     >
-      {/* Top Header Spacing (Leaves clear breathing room for Audio and Atmosphere controls) */}
+      {/* Top Header Spacing */}
       <div style={{ height: '44px' }} />
 
-      {/* Cinematic Illustrated Opening Title: HELLO / THERE / YOU */}
+      {/* Chunky Block Title: HELLO / THERE / YOU (Recreating the Messenger 3x3 block presentation) */}
       <div
         ref={welcomeTextRef}
         style={{
           position: 'absolute',
           top: isShortLandscape
-            ? 'clamp(24px, 5.5vh, 38px)'
-            : 'clamp(44px, 7.5vh, 84px)',
+            ? 'clamp(20px, 4.5vh, 32px)'
+            : 'clamp(36px, 6.5vh, 72px)',
           left: '50%',
           transform: 'translateX(-50%)',
           display: 'flex',
@@ -118,7 +118,8 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            lineHeight: 0.9,
+            lineHeight: 0.88,
+            gap: isShortLandscape ? '2px' : '4px',
           }}
         >
           {CONTENT_CONFIG.welcomeLines.map((line, idx) => (
@@ -126,17 +127,18 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
               key={idx}
               className="welcome-line"
               style={{
-                fontFamily: "'Fredoka', 'Cinzel', serif, sans-serif",
+                fontFamily: "'Chakra Petch', 'Russo One', 'Impact', sans-serif",
                 fontSize: isShortLandscape
-                  ? 'clamp(22px, 5.2vh, 28px)'
+                  ? 'clamp(24px, 5.8vh, 34px)'
                   : isSmallMobile
-                  ? 'clamp(30px, 8.8vw, 40px)'
-                  : 'clamp(38px, 5.6vw, 64px)',
-                fontWeight: 700,
-                letterSpacing: '0.06em',
-                color: '#fffbf2',
+                  ? 'clamp(32px, 9.4vw, 44px)'
+                  : 'clamp(44px, 6.4vw, 76px)',
+                fontWeight: 900,
+                letterSpacing: '0.1em',
+                color: '#f8f8f8',
+                WebkitTextStroke: '2.5px #1e252b',
                 textShadow:
-                  '0 3px 0 #7c5138, 0 5px 12px rgba(60, 40, 25, 0.28), 0 1px 3px rgba(0, 0, 0, 0.2)',
+                  '4px 4px 0px #1e252b, 6px 6px 0px rgba(30, 37, 43, 0.25)',
                 display: 'inline-block',
                 textTransform: 'uppercase',
               }}
@@ -147,7 +149,7 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
         </div>
       </div>
 
-      {/* Bottom Area: ENTER button & Building Hover Tooltip */}
+      {/* Bottom Area: ENTER button & Landmark Tooltip */}
       <div
         style={{
           display: 'flex',
@@ -156,7 +158,7 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
           gap: isShortLandscape ? '6px' : '10px',
           width: '100%',
           pointerEvents: 'none',
-          marginBottom: isShortLandscape ? '2px' : '10px',
+          marginBottom: isShortLandscape ? '2px' : '12px',
         }}
       >
         {/* Hovered / Selected Landmark Inspection Card */}
@@ -164,12 +166,11 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
           <div
             data-testid="building-tooltip"
             style={{
-              backgroundColor: 'rgba(255, 253, 248, 0.96)',
-              backdropFilter: 'blur(10px)',
+              backgroundColor: '#fffdfa',
+              border: '2px solid #1e252b',
+              borderRadius: '12px',
+              boxShadow: '4px 4px 0px #1e252b',
               padding: '10px 18px',
-              borderRadius: '20px',
-              boxShadow: '0 8px 24px rgba(60, 40, 25, 0.15)',
-              border: '2px solid rgba(238, 229, 203, 0.95)',
               textAlign: 'center',
               pointerEvents: 'auto',
               maxWidth: 'min(380px, 92vw)',
@@ -181,17 +182,18 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '4px',
-                backgroundColor: ANIME_PALETTE.wall.warmIvory,
-                color: ANIME_PALETTE.earth.timberWarm,
+                backgroundColor: MESSENGER_PALETTE.stuccoWarmCream,
+                color: MESSENGER_PALETTE.timberDarkOak,
                 fontSize: '10px',
                 fontWeight: 700,
                 textTransform: 'uppercase',
                 padding: '2px 8px',
-                borderRadius: '10px',
+                borderRadius: '6px',
+                border: '1px solid #1e252b',
                 marginBottom: '4px',
               }}
             >
-              <MapPin size={10} color={ANIME_PALETTE.roof.terracottaWarm} />
+              <MapPin size={10} color={MESSENGER_PALETTE.roofTerracotta} />
               <span>{activeBuilding.category}</span>
             </div>
 
@@ -199,8 +201,8 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
               style={{
                 fontSize: '14px',
                 fontWeight: 700,
-                color: '#34261f',
-                fontFamily: "'Fredoka', sans-serif",
+                fontFamily: "'Chakra Petch', 'Fredoka', sans-serif",
+                color: '#1e252b',
               }}
             >
               {activeBuilding.name}
@@ -209,26 +211,13 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
             <div
               style={{
                 fontSize: '11px',
-                color: '#6c584c',
-                marginTop: '3px',
-                lineHeight: 1.35,
+                color: '#556062',
+                marginTop: '2px',
+                lineHeight: 1.3,
               }}
             >
               {activeBuilding.description}
             </div>
-
-            {activeBuilding.metadata.storySnippet && (
-              <div
-                style={{
-                  fontSize: '10px',
-                  color: '#8a7968',
-                  fontStyle: 'italic',
-                  marginTop: '4px',
-                }}
-              >
-                "{activeBuilding.metadata.storySnippet}"
-              </div>
-            )}
 
             {selectedBuilding && (
               <button
@@ -237,7 +226,7 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
                 style={{
                   marginTop: '4px',
                   fontSize: '11px',
-                  color: ANIME_PALETTE.roof.terracottaWarm,
+                  color: MESSENGER_PALETTE.roofTerracotta,
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
@@ -251,7 +240,7 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
           </div>
         )}
 
-        {/* ENTER Button — Warm Storybook Terracotta Call to Action */}
+        {/* ENTER Button — Warm Gold Modular Block Call to Action matching Messenger */}
         <button
           ref={buttonRef}
           onClick={onEnter}
@@ -263,45 +252,45 @@ export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({
             alignItems: 'center',
             justifyContent: 'center',
             gap: '8px',
-            backgroundColor: ANIME_PALETTE.roof.terracottaWarm,
-            color: '#fffef9',
-            border: '2px solid #fff5ea',
-            borderRadius: '32px',
+            backgroundColor: MESSENGER_PALETTE.buttonGold,
+            color: MESSENGER_PALETTE.buttonText,
+            border: '2.5px solid #1e252b',
+            borderRadius: '10px',
+            boxShadow: '4px 4px 0px #1e252b',
             padding: isShortLandscape
-              ? '8px 22px'
+              ? '8px 24px'
               : isSmallMobile
-              ? '10px 24px'
-              : 'clamp(11px, 2.2vw, 14px) clamp(26px, 3.8vw, 36px)',
+              ? '10px 28px'
+              : 'clamp(11px, 2.2vw, 15px) clamp(28px, 4vw, 42px)',
             fontSize:
               isShortLandscape || isSmallMobile
-                ? '14px'
-                : 'clamp(14px, 2vw, 16px)',
-            fontWeight: 700,
-            fontFamily: "'Fredoka', sans-serif",
-            letterSpacing: '0.06em',
+                ? '15px'
+                : 'clamp(15px, 2.1vw, 18px)',
+            fontWeight: 900,
+            fontFamily: "'Chakra Petch', 'Russo One', 'Fredoka', sans-serif",
+            letterSpacing: '0.12em',
             cursor: isTransitioning ? 'default' : 'pointer',
-            boxShadow:
-              '0 8px 24px rgba(196, 94, 65, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.35)',
             transition:
-              'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease',
-            minHeight: '44px',
+              'transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, box-shadow 0.15s ease',
+            minHeight: isShortLandscape ? '40px' : '44px',
           }}
           onMouseEnter={(e) => {
             if (!isTransitioning) {
-              e.currentTarget.style.backgroundColor = '#af4c31';
-              e.currentTarget.style.transform = 'scale(1.04) translateY(-2px)';
+              e.currentTarget.style.backgroundColor = MESSENGER_PALETTE.buttonGoldHover;
+              e.currentTarget.style.transform = 'translateY(-2px) scale(1.03)';
+              e.currentTarget.style.boxShadow = '5px 5px 0px #1e252b';
             }
           }}
           onMouseLeave={(e) => {
             if (!isTransitioning) {
-              e.currentTarget.style.backgroundColor =
-                ANIME_PALETTE.roof.terracottaWarm;
-              e.currentTarget.style.transform = 'scale(1) translateY(0)';
+              e.currentTarget.style.backgroundColor = MESSENGER_PALETTE.buttonGold;
+              e.currentTarget.style.transform = 'translateY(0) scale(1)';
+              e.currentTarget.style.boxShadow = '4px 4px 0px #1e252b';
             }
           }}
         >
-          <span>{CONTENT_CONFIG.enterButtonText}</span>
-          <ArrowRight size={16} />
+          <span>ENTER</span>
+          <ArrowRight size={18} strokeWidth={3} color="#1e252b" />
         </button>
       </div>
     </div>

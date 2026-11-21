@@ -5,7 +5,9 @@ import gsap from 'gsap';
 import { AtmospherePhaseConfig } from '../../config/atmosphereConfig';
 import { WorldDefinition, BuildingItem, NPCEntity } from '../../world/types';
 import { SkyAndAtmosphere } from './SkyAndAtmosphere';
-import { PainterlyPlanet } from './PainterlyPlanet';
+import { MessengerPlanet } from './MessengerPlanet';
+import { MessengerTitle3D } from './MessengerTitle3D';
+import { MESSENGER_PALETTE } from '../../styles/messengerPalette';
 
 export type ViewMode = 'miniature' | 'walkable';
 
@@ -19,7 +21,7 @@ interface SceneCanvasProps {
   playerRotation: number;
   isWalking: boolean;
   targetPoint: [number, number, number] | null;
-  onGroundClick?: (x: number, z: number) => void;
+  onGroundClick?: (point: [number, number, number]) => void;
   onHoverBuilding?: (building: BuildingItem | null) => void;
   onSelectBuilding?: (building: BuildingItem) => void;
   onSelectNPC?: (npc: NPCEntity) => void;
@@ -27,10 +29,8 @@ interface SceneCanvasProps {
 
 /**
  * Continuous Camera Controller:
- * Handles the seamless zoom journey from planet orbit down to the ground-level town square.
- *
- * CRITICAL ARCHITECTURAL CONTRACT:
- * No scene swapping. The visitor literally watches the camera glide from space into the village.
+ * Smoothly glides from orbit perspective directly down into the town square on ENTER.
+ * 100% single continuous physical world.
  */
 const ContinuousCameraController: React.FC<{
   isEntering: boolean;
@@ -39,26 +39,26 @@ const ContinuousCameraController: React.FC<{
 }> = ({ isEntering, isEntered, playerPosition }) => {
   const { camera, size } = useThree();
   const aspect = size.width / Math.max(1, size.height);
-  const currentLookAt = useRef(new THREE.Vector3(0, -0.4, 0));
+  const currentLookAt = useRef(new THREE.Vector3(0, -0.2, 0));
 
-  // Compute adaptive orbit framing distance based on screen aspect ratio
+  // Adaptive orbit distance based on screen aspect ratio
   const orbitTargets = useMemo(() => {
-    const baseDistance = 17.4;
+    const baseDistance = 16.8;
     let z = baseDistance;
-    let y = 0.6;
-    let lookAtY = -0.4;
+    let y = 0.5;
+    let lookAtY = -0.3;
 
     if (aspect < 1.2) {
-      // Mobile portrait / tablet: increase distance to guarantee comfortable breathing room
-      const scale = 1.18 / Math.max(0.46, aspect);
+      // Mobile portrait / tablet
+      const scale = 1.15 / Math.max(0.46, aspect);
       z = baseDistance * scale;
-      y = 0.4;
-      lookAtY = -0.5;
+      y = 0.35;
+      lookAtY = -0.4;
     } else if (size.height < 520 && aspect > 1.3) {
       // Short mobile landscape
-      z = 15.8;
-      y = 0.35;
-      lookAtY = -0.25;
+      z = 15.2;
+      y = 0.3;
+      lookAtY = -0.2;
     }
 
     return {
@@ -67,7 +67,7 @@ const ContinuousCameraController: React.FC<{
     };
   }, [aspect, size.height]);
 
-  // Initial mount positioning & Return to Orbit animation
+  // Initial positioning & return to orbit
   useEffect(() => {
     if (isEntered || isEntering) return;
 
@@ -102,8 +102,7 @@ const ContinuousCameraController: React.FC<{
   useEffect(() => {
     if (!isEntering) return;
 
-    // Target position: Town Square (lat 20, lon 0)
-    // Camera arrives at [0, 2.8, 6.2] looking at [0, 1.4, 4.4]
+    // Arrive right in front of the Town Square at ground level
     const townArrivalPos = new THREE.Vector3(0, 2.8, 6.2);
     const townArrivalLookAt = new THREE.Vector3(0, 1.4, 4.4);
 
@@ -134,11 +133,10 @@ const ContinuousCameraController: React.FC<{
     }
   }, [isEntering, camera]);
 
-  // Third-person follow camera tracking when walking inside the town
+  // Third-person follow tracking when walking
   useFrame((_, delta) => {
     if (!isEntered) return;
 
-    // Follow camera offset based on playerPosition:
     const targetCamX = playerPosition[0] * 0.75;
     const targetCamY = 2.8 + playerPosition[1] * 0.5;
     const targetCamZ = 6.2 + playerPosition[2] * 0.75;
@@ -181,6 +179,7 @@ export const SceneCanvas: React.FC<SceneCanvasProps> = ({
   playerRotation,
   isWalking,
   targetPoint,
+  onGroundClick,
   onHoverBuilding,
   onSelectBuilding,
   onSelectNPC,
@@ -190,14 +189,14 @@ export const SceneCanvas: React.FC<SceneCanvasProps> = ({
       style={{
         position: 'absolute',
         inset: 0,
-        background: `linear-gradient(180deg, ${atmosphere.skyTopColor} 0%, ${atmosphere.skyBottomColor} 100%)`,
-        transition: 'background 1.5s cubic-bezier(0.4, 0, 0.2, 1)',
+        // Serene flat turquoise ocean background matching Messenger
+        background: `linear-gradient(180deg, ${MESSENGER_PALETTE.skyBackground} 0%, ${MESSENGER_PALETTE.oceanSurface} 100%)`,
         overflow: 'hidden',
       }}
     >
       <Canvas
         shadows
-        camera={{ position: [0, 0.6, 17.4], fov: 40, near: 0.1, far: 140 }}
+        camera={{ position: [0, 0.5, 16.8], fov: 38, near: 0.1, far: 140 }}
         dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 2)]}
         gl={{
           antialias: true,
@@ -211,27 +210,29 @@ export const SceneCanvas: React.FC<SceneCanvasProps> = ({
           gl.toneMappingExposure = 1.05;
         }}
       >
-        {/* Continuous Camera Controller (Seamless Zoom Journey) */}
+        {/* Continuous Camera Controller */}
         <ContinuousCameraController
           isEntering={isEntering}
           isEntered={isEntered}
           playerPosition={playerPosition}
         />
 
-        {/* Dynamic Sky, Lights, Clouds, Birds, Stars */}
+        {/* Dynamic Sky & Sun Lighting */}
         <SkyAndAtmosphere atmosphere={atmosphere} />
 
-        {/* ONE UNIFIED PHYSICAL WORLD (Rendered continuously at all scales) */}
-        <PainterlyPlanet
+        {/* 3D Extruded Block Typography: HELLO / THERE / YOU matching Messenger */}
+        <MessengerTitle3D isEntered={isEntered} isEntering={isEntering} />
+
+        {/* ONE UNIFIED PHYSICAL WORLD (Rendered continuously at all camera distances) */}
+        <MessengerPlanet
           world={world}
-          glowIntensity={atmosphere.windowGlowIntensity}
-          lanternGlowIntensity={atmosphere.lanternGlowIntensity}
           isEntering={isEntering}
           isEntered={isEntered}
           playerPosition={playerPosition}
           playerRotation={playerRotation}
           isWalking={isWalking}
           targetPoint={targetPoint}
+          onGroundClick={onGroundClick}
           onHoverBuilding={onHoverBuilding}
           onSelectBuilding={onSelectBuilding}
           onSelectNPC={onSelectNPC}

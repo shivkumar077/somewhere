@@ -29,7 +29,7 @@ html, body, #root {
   max-height: 100vh;
   overflow: hidden;
   position: fixed;
-  background-color: #7ec8e3;
+  background-color: #5bb8b2;
   user-select: none;
   touch-action: none;
 }
@@ -37,6 +37,9 @@ html, body, #root {
 canvas {
   touch-action: none;
   outline: none;
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 button {
