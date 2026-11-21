@@ -84,7 +84,7 @@ const SECTION_COURIER: Record<PortfolioSection, { name: string; icon: string }> 
   projects: { name: 'Hacker Girl', icon: '📂' },
   skills: { name: 'Systems Engineer', icon: '⚡' },
   contact: { name: 'Dave the Musician', icon: '📬' },
-  cv: { name: 'Soto the Fox', icon: '🦊' },
+  cv: { name: 'Suto the Fox', icon: '🦊' },
 };
 
 interface LetterModalProps {

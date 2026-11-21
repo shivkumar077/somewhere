@@ -86,7 +86,7 @@ const NPC_CONFIGS: NPCConfig[] = [
     id: 'fox',
     section: 'cv',
     label: 'CV DOCUMENT',
-    name: 'Soto the Fox',
+    name: 'Suto the Fox',
     icon: '🦊',
     fallbackPos: [-8.36976, -20.368, 10.0339],
     color: '#ff85a2',
@@ -153,9 +153,9 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
   const triggerHandOff = (section: PortfolioSection, npcName: string) => {
     const isFox = section === 'cv';
     setDeliveryToast({
-      text: isFox ? `🦊 CV Delivered by Soto!` : `✉ Letter Delivered by ${npcName}!`,
+      text: isFox ? `🦊 CV Delivered by Suto!` : `✉ Letter Delivered by ${npcName}!`,
       sub: isFox
-        ? `Soto: "Here is Shiv's CV document! Ready to read!"`
+        ? `Suto: "Here is Shiv's CV document! Ready to read!"`
         : `Here is Shiv's ${section.toUpperCase()} portfolio letter!`,
     });
     setTimeout(() => setDeliveryToast(null), 3000);
@@ -355,7 +355,7 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
           const isFox = sprint.npcId === 'fox' || sprint.section === 'cv';
           setDeliveryToast({
             text: isFox
-              ? `🦊 Soto is coming to deliver your CV!`
+              ? `🦊 Suto is coming to deliver your CV!`
               : `🏃 ${sprint.npcName} is running to you!`,
             sub: isFox
               ? `Delivering Shiv's CV document...`
@@ -421,14 +421,14 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
 
             const isFoxArrival = sprint.npcId === 'fox' || sprint.section === 'cv';
             setDeliveryToast({
-              text: isFoxArrival ? `🦊 CV Delivered by Soto!` : `✉ Letter Handed to You!`,
+              text: isFoxArrival ? `🦊 CV Delivered by Suto!` : `✉ Letter Handed to You!`,
               sub: isFoxArrival
-                ? `Soto: "Here is Shiv's CV document! Ready to read!"`
+                ? `Suto: "Here is Shiv's CV document! Ready to read!"`
                 : `${sprint.npcName}: "Special delivery! Here is Shiv's ${sprint.section.toUpperCase()} letter!"`,
               distance: 'Delivered',
             });
 
-            // Hand-off pause: let the user see Soto standing right in front of them with the letter!
+            // Hand-off pause: let the user see Suto standing right in front of them with the letter!
             setTimeout(() => {
               (window as any)._sprintActive = false;
               onOpenLetter(sprint.section);
@@ -447,7 +447,7 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
         }
       }
 
-      // Ensure all NPCs including Fox (Soto) remain visible in the scene
+      // Ensure all NPCs including Fox (Suto) remain visible in the scene
       if (scene && scene.npcs) {
         const fox = scene.npcs.find((n: any) => n.options?.id === 'fox');
         if (fox && fox.mesh && !activeSprintRef.current) {
@@ -603,7 +603,7 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
                 }}
               >
                 <span style={{ fontSize: '14px' }}>{isRunner ? (b.id === 'fox' ? '🦊' : '🏃') : b.icon}</span>
-                <span>{isRunner ? (b.id === 'fox' ? 'SOTO DELIVERING CV' : `DELIVERING ${b.label}`) : b.label}</span>
+                <span>{isRunner ? (b.id === 'fox' ? 'SUTO DELIVERING CV' : `DELIVERING ${b.label}`) : b.label}</span>
                 {b.isClose && !isRunner && (
                   <span
                     style={{
@@ -635,7 +635,7 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
                   border: '1px solid rgba(255,255,255,0.3)',
                 }}
               >
-                {b.id === 'fox' ? '🦊 Soto the Fox' : b.name}
+                {b.id === 'fox' ? '🦊 Suto the Fox' : b.name}
               </span>
 
               {/* Pointer Arrow */}
