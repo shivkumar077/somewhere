@@ -162,25 +162,6 @@ export const LetterModal: React.FC<LetterModalProps> = ({
       liveUrl: 'https://forge-fit-gilt.vercel.app/',
       githubUrl: 'https://github.com/shivkumar077/ForgeFit',
     },
-    {
-      index: '04',
-      tag: 'ARCHIVE & RESEARCH',
-      title: 'Yuuki OS & Research Projects',
-      subtitle: 'Distributed Systems, Research Papers & Experimental AI Tools',
-      status: 'EXPLORE',
-      tech: ['Next.js', 'PostgreSQL', 'Tauri', 'NLP', 'Python', 'WebSockets'],
-      metric: 'Active Open Source Repositories · U.S. Patent Application · Research Publications',
-      description:
-        'A collection of specialized engineering systems and research papers, including the Yuuki OS task priority engine, NLP Language Learning research paper, IT Salary Prediction regression model, and high-performance developer workbench utilities.',
-      features: [
-        'Yuuki OS: Priority engine and fail-closed authorization microservices',
-        'Language Learning Research Paper: NLP & patented adaptive language model techniques',
-        'IT Salary Prediction: Machine learning regression model trained across 53K+ records',
-        'Full suite of open source tools published and maintained on GitHub',
-      ],
-      liveUrl: 'https://yuuki-os.vercel.app/',
-      githubUrl: 'https://github.com/shivkumar077?tab=repositories',
-    },
   ];
 
   return (
@@ -192,11 +173,13 @@ export const LetterModal: React.FC<LetterModalProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '16px',
+        padding: 'clamp(8px, 2.5vw, 16px)',
         backgroundColor: 'rgba(20, 28, 34, 0.45)',
         backdropFilter: 'blur(3px)',
         pointerEvents: 'auto',
         animation: 'letterOverlayFadeIn 0.2s ease',
+        overflowX: 'hidden',
+        boxSizing: 'border-box',
       }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
@@ -209,14 +192,15 @@ export const LetterModal: React.FC<LetterModalProps> = ({
           position: 'relative',
           width: '100%',
           maxWidth: section === 'cv' ? '820px' : '720px',
-          maxHeight: '88vh',
+          maxHeight: '90vh',
           backgroundColor: '#fffef9',
-          borderRadius: '22px',
-          border: '3.5px solid #1e252b',
-          boxShadow: '7px 7px 0px #1e252b',
+          borderRadius: '20px',
+          border: '3px solid #1e252b',
+          boxShadow: '6px 6px 0px #1e252b',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
+          boxSizing: 'border-box',
           fontFamily: "'Fredoka', 'Plus Jakarta Sans', sans-serif",
           animation: 'letterCardPop 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
         }}
@@ -227,9 +211,11 @@ export const LetterModal: React.FC<LetterModalProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '14px 20px',
+            padding: '12px clamp(12px, 3vw, 20px)',
             backgroundColor: '#fbf5e6',
             borderBottom: '2.5px solid #1e252b',
+            boxSizing: 'border-box',
+            overflow: 'hidden',
           }}
         >
           {/* Section Stamp Pill & Courier Attribution */}
@@ -296,13 +282,16 @@ export const LetterModal: React.FC<LetterModalProps> = ({
 
         {/* Scrollable Letter Body */}
         <div
+          className="portfolio-letter-body"
           style={{
-            padding: '24px',
+            padding: 'clamp(14px, 3.5vw, 24px)',
             overflowY: 'auto',
+            overflowX: 'hidden',
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            gap: '20px',
+            gap: '18px',
+            boxSizing: 'border-box',
           }}
         >
           {/* SECTION: ABOUT */}
@@ -1042,11 +1031,13 @@ export const LetterModal: React.FC<LetterModalProps> = ({
                 <button
                   disabled={projectPage === 0}
                   onClick={() => setProjectPage((prev) => Math.max(0, prev - 1))}
+                  aria-label="Previous Project"
+                  title="Previous Project"
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '4px',
-                    padding: '6px 12px',
+                    padding: '6px 10px',
                     backgroundColor: projectPage === 0 ? '#ebe7dc' : '#ffffff',
                     border: '1.5px solid #1e252b',
                     borderRadius: '8px',
@@ -1056,19 +1047,21 @@ export const LetterModal: React.FC<LetterModalProps> = ({
                     color: projectPage === 0 ? '#999' : '#1e252b',
                     cursor: projectPage === 0 ? 'not-allowed' : 'pointer',
                     opacity: projectPage === 0 ? 0.6 : 1,
+                    flexShrink: 0,
                   }}
                 >
-                  <ChevronLeft size={16} /> Prev Project
+                  <ChevronLeft size={16} />
+                  <span className="project-btn-label">Prev</span>
                 </button>
 
                 {/* Page Indicator Bubbles */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                   {PROJECTS.map((_, i) => (
                     <button
                       key={i}
                       onClick={() => setProjectPage(i)}
                       style={{
-                        width: projectPage === i ? '24px' : '10px',
+                        width: projectPage === i ? '22px' : '10px',
                         height: '10px',
                         borderRadius: '5px',
                         backgroundColor: projectPage === i ? '#f4c430' : '#d5cfc0',
@@ -1077,7 +1070,7 @@ export const LetterModal: React.FC<LetterModalProps> = ({
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
                       }}
-                      title={`Go to page ${i + 1}`}
+                      title={`Go to project ${i + 1}`}
                     />
                   ))}
                 </div>
@@ -1085,11 +1078,13 @@ export const LetterModal: React.FC<LetterModalProps> = ({
                 <button
                   disabled={projectPage === PROJECTS.length - 1}
                   onClick={() => setProjectPage((prev) => Math.min(PROJECTS.length - 1, prev + 1))}
+                  aria-label="Next Project"
+                  title="Next Project"
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '4px',
-                    padding: '6px 12px',
+                    padding: '6px 10px',
                     backgroundColor: projectPage === PROJECTS.length - 1 ? '#ebe7dc' : '#f4c430',
                     border: '1.5px solid #1e252b',
                     borderRadius: '8px',
@@ -1099,9 +1094,11 @@ export const LetterModal: React.FC<LetterModalProps> = ({
                     color: projectPage === PROJECTS.length - 1 ? '#999' : '#1e252b',
                     cursor: projectPage === PROJECTS.length - 1 ? 'not-allowed' : 'pointer',
                     opacity: projectPage === PROJECTS.length - 1 ? 0.6 : 1,
+                    flexShrink: 0,
                   }}
                 >
-                  Next Project <ChevronRight size={16} />
+                  <span className="project-btn-label">Next</span>
+                  <ChevronRight size={16} />
                 </button>
               </div>
             </div>
@@ -1272,25 +1269,39 @@ export const LetterModal: React.FC<LetterModalProps> = ({
                   backgroundColor: '#ffffff',
                   border: '2.5px solid #1e252b',
                   borderRadius: '16px',
-                  padding: '20px',
+                  padding: 'clamp(14px, 3.5vw, 20px)',
                   boxShadow: '3.5px 3.5px 0px #1e252b',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '12px',
+                  boxSizing: 'border-box',
+                  overflow: 'hidden',
+                  maxWidth: '100%',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Mail size={18} color="#f4c430" />
-                  <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, maxWidth: '100%' }}>
+                  <Mail size={18} color="#f4c430" style={{ flexShrink: 0 }} />
+                  <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
                     <span style={{ fontSize: '11px', color: '#65737e', fontWeight: 700, textTransform: 'uppercase' }}>Direct Email</span>
-                    <div>
+                    <div style={{ minWidth: 0, overflow: 'hidden' }}>
                       <a
                         href="https://mail.google.com/mail/?view=cm&fs=1&to=shivkumar6990655@gmail.com"
                         onClick={openShivGmail}
                         target="_blank"
                         rel="noopener noreferrer"
                         title="Open in Gmail (Web on PC / App on Phone)"
-                        style={{ fontSize: '15px', fontWeight: 700, color: '#1e252b', textDecoration: 'underline', textDecorationColor: '#f4c430', textUnderlineOffset: '3px' }}
+                        style={{
+                          fontSize: 'clamp(11.5px, 3.4vw, 15px)',
+                          fontWeight: 700,
+                          color: '#1e252b',
+                          textDecoration: 'underline',
+                          textDecorationColor: '#f4c430',
+                          textUnderlineOffset: '3px',
+                          display: 'block',
+                          wordBreak: 'break-all',
+                          overflowWrap: 'anywhere',
+                          maxWidth: '100%',
+                        }}
                       >
                         shivkumar6990655@gmail.com
                       </a>
@@ -1448,35 +1459,36 @@ export const LetterModal: React.FC<LetterModalProps> = ({
           {section === 'cv' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
                   <div
                     style={{
-                      width: '46px',
-                      height: '46px',
-                      borderRadius: '14px',
+                      width: '42px',
+                      height: '42px',
+                      borderRadius: '12px',
                       backgroundColor: '#f4c430',
                       border: '2px solid #1e252b',
-                      boxShadow: '2.5px 2.5px 0px #1e252b',
+                      boxShadow: '2px 2px 0px #1e252b',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '22px',
+                      fontSize: '20px',
+                      flexShrink: 0,
                     }}
                   >
                     📄
                   </div>
-                  <div>
-                    <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#1e252b', margin: 0 }}>
+                  <div style={{ minWidth: 0 }}>
+                    <h2 style={{ fontSize: 'clamp(18px, 4.5vw, 22px)', fontWeight: 800, color: '#1e252b', margin: 0, lineHeight: 1.2 }}>
                       Curriculum Vitae
                     </h2>
-                    <p style={{ fontSize: '13px', color: '#55636d', fontWeight: 600, margin: '2px 0 0 0' }}>
-                      Read Shiv's CV directly below (or download if needed)
+                    <p style={{ fontSize: '11.5px', color: '#65737e', fontWeight: 600, margin: '2px 0 0 0', lineHeight: 1.2 }}>
+                      Shiv Kumar · Systems & Cloud
                     </p>
                   </div>
                 </div>
 
                 {/* View Mode Toggle & Download Button */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                   <div
                     style={{
                       display: 'flex',
@@ -1489,7 +1501,7 @@ export const LetterModal: React.FC<LetterModalProps> = ({
                     <button
                       onClick={() => setCvViewMode('doc')}
                       style={{
-                        padding: '4px 10px',
+                        padding: '4px 8px',
                         borderRadius: '6px',
                         border: 'none',
                         backgroundColor: cvViewMode === 'doc' ? '#ffffff' : 'transparent',
@@ -1505,7 +1517,7 @@ export const LetterModal: React.FC<LetterModalProps> = ({
                     <button
                       onClick={() => setCvViewMode('pdf')}
                       style={{
-                        padding: '4px 10px',
+                        padding: '4px 8px',
                         borderRadius: '6px',
                         border: 'none',
                         backgroundColor: cvViewMode === 'pdf' ? '#ffffff' : 'transparent',
@@ -1526,13 +1538,13 @@ export const LetterModal: React.FC<LetterModalProps> = ({
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '5px',
-                      padding: '6px 12px',
+                      gap: '4px',
+                      padding: '5px 10px',
                       backgroundColor: '#f4c430',
                       border: '1.5px solid #1e252b',
                       borderRadius: '8px',
                       boxShadow: '1.5px 1.5px 0px #1e252b',
-                      fontSize: '11.5px',
+                      fontSize: '11px',
                       fontWeight: 700,
                       color: '#1e252b',
                       textDecoration: 'none',
@@ -1658,25 +1670,55 @@ export const LetterModal: React.FC<LetterModalProps> = ({
                 </div>
               ) : (
                 /* View 2: Embedded PDF Viewer */
-                <div
-                  style={{
-                    backgroundColor: '#ffffff',
-                    border: '2.5px solid #1e252b',
-                    borderRadius: '16px',
-                    overflow: 'hidden',
-                    height: '560px',
-                    boxShadow: '3px 3px 0px #1e252b',
-                  }}
-                >
-                  <iframe
-                    src="/Shiv_Kumar_CV.pdf#toolbar=0&navpanes=0"
-                    title="Shiv Kumar CV Document"
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div
                     style={{
-                      width: '100%',
-                      height: '100%',
-                      border: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: '6px',
+                      backgroundColor: '#fbf5e6',
+                      border: '1.5px solid #1e252b',
+                      borderRadius: '10px',
+                      padding: '6px 12px',
+                      fontSize: '11.5px',
+                      color: '#1e252b',
+                      fontWeight: 600,
                     }}
-                  />
+                  >
+                    <span>💡 Switch to <strong>Article View</strong> for mobile reading.</span>
+                    <a
+                      href="/Shiv_Kumar_CV.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: '#1e252b', fontWeight: 800, textDecoration: 'underline' }}
+                    >
+                      Open Full PDF ↗
+                    </a>
+                  </div>
+
+                  <div
+                    style={{
+                      backgroundColor: '#ffffff',
+                      border: '2.5px solid #1e252b',
+                      borderRadius: '16px',
+                      overflow: 'hidden',
+                      height: 'clamp(320px, 58vh, 560px)',
+                      boxShadow: '3px 3px 0px #1e252b',
+                    }}
+                  >
+                    <iframe
+                      src="/Shiv_Kumar_CV.pdf#toolbar=0&navpanes=0&view=FitH"
+                      title="Shiv Kumar CV Document"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        border: 'none',
+                        display: 'block',
+                      }}
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -1685,6 +1727,18 @@ export const LetterModal: React.FC<LetterModalProps> = ({
       </div>
 
       <style>{`
+        .portfolio-letter-card {
+          overflow-x: hidden !important;
+        }
+        .portfolio-letter-card * {
+          max-width: 100%;
+          box-sizing: border-box;
+        }
+        @media (max-width: 480px) {
+          .project-btn-label {
+            display: none !important;
+          }
+        }
         @keyframes letterOverlayFadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
