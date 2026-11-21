@@ -131,19 +131,6 @@ export const App: React.FC = () => {
       {/* 3-Lines Navigation Menu Popup */}
       {isOpen && (
         <>
-          {/* Transparent click-outside dismisser (no darkening/blackout) */}
-          <div
-            onClick={() => setIsOpen(false)}
-            aria-hidden="true"
-            style={{
-              position: 'fixed',
-              inset: 0,
-              zIndex: 9998,
-              backgroundColor: 'transparent',
-              pointerEvents: 'auto',
-            }}
-          />
-
           {/* Hand-drawn Storybook Pop-up Card */}
           <div
             role="dialog"

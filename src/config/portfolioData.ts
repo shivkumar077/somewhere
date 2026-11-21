@@ -113,8 +113,13 @@ export const PORTFOLIO_DATA: PortfolioData = {
 
   experience: {
     heading: 'The Workshop — Practical Engineering & Craft',
-    description: 'Real-world engineering through independent systems building, open-source development, and architectural research.',
+    description: 'Active software engineering through mission simulations, real-world systems building, and telemetry architecture.',
     pillars: [
+      {
+        title: 'ASTRA — Satellite Operations & Simulation',
+        description: 'Developing an interactive satellite mission simulation and telemetry platform combining spacecraft visualization, telemetry monitoring, and anomaly simulation with NASA APIs (Present / Active).',
+        keyFocus: ['Spacecraft telemetry tracking', 'Supabase data infrastructure', 'Real-time orbital mechanics'],
+      },
       {
         title: 'Distributed Systems & Cloud Tooling',
         description: 'Architecting containerized microservice pipelines, telemetry collectors, and automated chaos-testing harnesses with Docker, Kubernetes, and Go.',
@@ -124,11 +129,6 @@ export const PORTFOLIO_DATA: PortfolioData = {
         title: 'Creative Technology & 3D Engineering',
         description: 'Developing WebGL/Three.js interactive web applications, shaders, procedural geometry generators, and real-time audio synthesizers.',
         keyFocus: ['WebGL & R3F rendering', 'Procedural generation', 'Web Audio DSP'],
-      },
-      {
-        title: 'Full-Stack Software Architecture',
-        description: 'Designing end-to-end applications with TypeScript, React, Node.js, and relational/key-value storage with strict test-driven development.',
-        keyFocus: ['Clean API design', 'End-to-end type safety', 'Performance profiling'],
       },
     ],
   },

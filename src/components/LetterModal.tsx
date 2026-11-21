@@ -745,7 +745,7 @@ export const LetterModal: React.FC<LetterModalProps> = ({
                 </div>
               </div>
 
-              {/* Exact user-requested text: 'scqthatic' */}
+              {/* ASTRA Active Experience Card */}
               <div
                 style={{
                   backgroundColor: '#ffffff',
@@ -753,56 +753,90 @@ export const LetterModal: React.FC<LetterModalProps> = ({
                   borderRadius: '16px',
                   padding: '24px',
                   boxShadow: '4px 4px 0px #1e252b',
-                  textAlign: 'center',
                   display: 'flex',
                   flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '12px',
-                  minHeight: '180px',
+                  gap: '14px',
                 }}
               >
-                <span
-                  style={{
-                    backgroundColor: '#fbf5e6',
-                    color: '#1e252b',
-                    border: '1.5px solid #1e252b',
-                    borderRadius: '8px',
-                    padding: '3px 12px',
-                    fontSize: '11.5px',
-                    fontWeight: 700,
-                    letterSpacing: '0.06em',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  CURRENT ENGAGEMENT
-                </span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+                      <h3
+                        style={{
+                          fontSize: '26px',
+                          fontWeight: 800,
+                          color: '#1e252b',
+                          margin: 0,
+                          letterSpacing: '0.04em',
+                          fontFamily: "'Chakra Petch', 'Fredoka', sans-serif",
+                        }}
+                      >
+                        ASTRA
+                      </h3>
+                      <span
+                        style={{
+                          backgroundColor: '#e6f7ec',
+                          color: '#1e7e34',
+                          border: '1.5px solid #1e7e34',
+                          borderRadius: '999px',
+                          padding: '2px 8px',
+                          fontSize: '11px',
+                          fontWeight: 800,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                        }}
+                      >
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#28a745' }}></span>
+                        PRESENT / ACTIVE
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '15px', fontWeight: 700, color: '#323f4b', margin: 0 }}>
+                      Satellite Operations & Mission Simulation Platform
+                    </p>
+                    <p style={{ fontSize: '12.5px', color: '#65737e', fontWeight: 600, margin: '2px 0 0 0' }}>
+                      Systems Engineer & Architecture • Oct 2026 – Present
+                    </p>
+                  </div>
+                </div>
 
-                <h3
-                  style={{
-                    fontSize: '34px',
-                    fontWeight: 800,
-                    color: '#1e252b',
-                    margin: 0,
-                    letterSpacing: '0.04em',
-                    textTransform: 'lowercase',
-                    fontFamily: "'Chakra Petch', 'Fredoka', sans-serif",
-                  }}
-                >
-                  scqthatic
-                </h3>
-
-                <p
-                  style={{
-                    fontSize: '13.5px',
-                    color: '#65737e',
-                    fontWeight: 600,
-                    margin: 0,
-                    maxWidth: '400px',
-                  }}
-                >
-                  Systems, Reliability & Backend Development
+                <p style={{ fontSize: '14px', lineHeight: 1.6, color: '#323f4b', margin: 0 }}>
+                  Developing an interactive satellite mission simulation and telemetry platform combining spacecraft visualization, live telemetry tracking, satellite health indicators, and anomaly scenario simulations with NASA open data integration.
                 </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '13px', color: '#1e252b' }}>
+                    <span style={{ color: '#f4c430', fontSize: '14px', fontWeight: 900 }}>✦</span>
+                    <span>Engineering real-time telemetry streaming, orbital tracking, and anomaly simulation workflows.</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '13px', color: '#1e252b' }}>
+                    <span style={{ color: '#f4c430', fontSize: '14px', fontWeight: 900 }}>✦</span>
+                    <span>Building Supabase-backed application infrastructure and extensible modular architecture for mission data.</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '13px', color: '#1e252b' }}>
+                    <span style={{ color: '#f4c430', fontSize: '14px', fontWeight: 900 }}>✦</span>
+                    <span>Designing resilient state synchronization and interactive 3D satellite visualization pipelines.</span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+                  {['TypeScript', 'React', 'NASA APIs', 'Supabase', 'Docker', 'Go'].map((tech) => (
+                    <span
+                      key={tech}
+                      style={{
+                        backgroundColor: '#f6f7f9',
+                        color: '#1e252b',
+                        border: '1.5px solid #1e252b',
+                        borderRadius: '8px',
+                        padding: '3px 10px',
+                        fontSize: '11.5px',
+                        fontWeight: 700,
+                      }}
+                    >
+                      {tech}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           )}
