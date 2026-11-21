@@ -145,65 +145,85 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
   const activeSprintRef = useRef<ActiveSprint | null>(null);
   const catRef = useRef<LoadedCat | null>(null);
 
-  // Preload stylized toon cat model (Suto)
+  // Module-level cached loader for knight_cat so it loads only ONCE and never reloads
   useEffect(() => {
-    const loader = new GLTFLoader();
-    loader.load(
-      '/assets/toon_cat_free.glb',
-      (gltf) => {
-        const catModel = gltf.scene;
-        // Scale to clearly visible cute cat proportions
-        catModel.scale.set(0.38, 0.38, 0.38);
-        catModel.rotation.y = 0;
+    // Check if window cached cat exists
+    const cachedGLTF = (window as any)._cachedKnightCatGLTF;
+    const processGLTF = (gltf: any) => {
+      const catModel = gltf.scene.clone(true);
+      // Feet alignment offset: bottom of knight_cat is around -0.55m, so offset up
+      catModel.position.set(0, 0.55, 0);
+      // Prominent, clear knight cat scale
+      catModel.scale.set(0.48, 0.48, 0.48);
 
-        // Apply hand-drawn cel-shaded art style matching the website
-        catModel.traverse((child: any) => {
-          if (child.isMesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-            child.frustumCulled = false;
-            if (child.geometry) {
-              if (!child.geometry.updateRanges) child.geometry.updateRanges = [];
-              if (child.geometry.attributes) {
-                Object.values(child.geometry.attributes).forEach((attr: any) => {
-                  if (attr && !attr.updateRanges) attr.updateRanges = [];
-                });
-              }
-            }
-            const oldMap = child.material?.map;
-            if (oldMap && !oldMap.updateRanges) oldMap.updateRanges = [];
-            child.material = new THREE.MeshToonMaterial({
-              map: oldMap || null,
-              color: 0xffffff,
-            });
-            if (child.material.map && !child.material.map.updateRanges) {
-              child.material.map.updateRanges = [];
+      // Apply hand-drawn cel-shaded art style matching the website
+      catModel.traverse((child: any) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          child.frustumCulled = false;
+          if (child.geometry) {
+            if (!child.geometry.updateRanges) child.geometry.updateRanges = [];
+            if (child.geometry.attributes) {
+              Object.values(child.geometry.attributes).forEach((attr: any) => {
+                if (attr && !attr.updateRanges) attr.updateRanges = [];
+              });
             }
           }
-        });
-
-        const wrapper = new THREE.Group();
-        wrapper.name = 'suto_cat_courier';
-        const defaultFoxPos = new THREE.Vector3(-8.36976, -20.368, 10.0339);
-        const up = defaultFoxPos.clone().normalize();
-        wrapper.position.copy(defaultFoxPos);
-        wrapper.up.copy(up);
-        wrapper.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), up);
-        wrapper.add(catModel);
-        wrapper.visible = true; // Always visible in world!
-
-        const mixer = new THREE.AnimationMixer(catModel);
-        let action: any = null;
-        if (gltf.animations && gltf.animations.length > 0) {
-          action = mixer.clipAction(gltf.animations[0]);
-          action.setEffectiveTimeScale(1.3); // bouncy, cute energetic cat trot/run!
-          action.play();
+          const oldMap = child.material?.map;
+          if (oldMap && !oldMap.updateRanges) oldMap.updateRanges = [];
+          child.material = new THREE.MeshToonMaterial({
+            map: oldMap || null,
+            color: 0xffffff,
+          });
+          if (child.material.map && !child.material.map.updateRanges) {
+            child.material.map.updateRanges = [];
+          }
         }
+      });
 
-        catRef.current = { wrapper, model: catModel, mixer, action };
+      const wrapper = new THREE.Group();
+      wrapper.name = 'suto_cat_courier';
+      const defaultFoxPos = new THREE.Vector3(-8.36976, -20.368, 10.0339);
+      const up = defaultFoxPos.clone().normalize();
+      wrapper.position.copy(defaultFoxPos);
+      wrapper.up.copy(up);
+      wrapper.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), up);
+      wrapper.add(catModel);
+      wrapper.visible = true; // Always visible in world!
+
+      let mixer: any = null;
+      let action: any = null;
+      if (gltf.animations && gltf.animations.length > 0) {
+        mixer = new THREE.AnimationMixer(catModel);
+        action = mixer.clipAction(gltf.animations[0]);
+        action.setEffectiveTimeScale(1.3);
+        action.play();
+      }
+
+      catRef.current = { wrapper, model: catModel, mixer, action };
+    };
+
+    if (cachedGLTF) {
+      processGLTF(cachedGLTF);
+      return;
+    }
+
+    const loader = new GLTFLoader();
+    loader.load(
+      '/assets/knight_cat.glb',
+      (gltf) => {
+        (window as any)._cachedKnightCatGLTF = gltf;
+        processGLTF(gltf);
       },
       undefined,
-      (err) => console.warn('Failed to load Suto cat model:', err)
+      (err) => {
+        console.warn('Failed to load knight cat model, falling back to toon_cat:', err);
+        loader.load('/assets/toon_cat_free.glb', (fbGltf) => {
+          (window as any)._cachedKnightCatGLTF = fbGltf;
+          processGLTF(fbGltf);
+        });
+      }
     );
   }, []);
 
@@ -258,7 +278,7 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
           if (typeof chars.unlockCamera === 'function') chars.unlockCamera();
           if (typeof chars.enable === 'function') chars.enable();
         }
-      } catch (err) {}
+      } catch (err) { }
 
       // Keep Suto sitting happily with the player for 10s after closing so user clearly sees Suto!
       setTimeout(() => {
@@ -556,6 +576,10 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
         }
         if (catRef.current.mixer) {
           catRef.current.mixer.update(0.018);
+        } else if (!activeSprintRef.current && catRef.current.model) {
+          // Gentle idle bobbing/breathing animation for Knight Cat
+          const t = now * 0.003;
+          catRef.current.model.position.y = 0.55 + Math.sin(t) * 0.03;
         }
       }
 
