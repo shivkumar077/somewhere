@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Download } from 'lucide-react';
 
 interface MenuItem {
   num: string;
@@ -113,16 +114,41 @@ export const App: React.FC = () => {
                 ✦ PORTFOLIO
               </span>
 
-              <span
+              <a
+                href="/Shiv_Kumar_CV.pdf"
+                download="Shiv_Kumar_CV.pdf"
+                aria-label="Download Shiv Kumar's CV"
                 style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  backgroundColor: '#ffffff',
+                  color: '#1e252b',
+                  border: '1.5px solid #1e252b',
+                  borderRadius: '8px',
+                  padding: '3px 8px',
                   fontSize: '11px',
-                  fontWeight: 600,
-                  color: '#848d97',
+                  fontWeight: 700,
                   letterSpacing: '0.04em',
+                  textDecoration: 'none',
+                  boxShadow: '1.5px 1.5px 0px #1e252b',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f4c430';
+                  e.currentTarget.style.transform = 'translate(-1px, -1px)';
+                  e.currentTarget.style.boxShadow = '2.5px 2.5px 0px #1e252b';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#ffffff';
+                  e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.boxShadow = '1.5px 1.5px 0px #1e252b';
                 }}
               >
-                SELECT SECTION
-              </span>
+                <Download size={12} strokeWidth={2.8} />
+                <span>DOWNLOAD CV</span>
+              </a>
             </div>
 
             {/* List of Titles matching hand-drawn website theme */}
