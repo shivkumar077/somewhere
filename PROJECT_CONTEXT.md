@@ -11,21 +11,18 @@
   - Recreated the welcome-text composition (`HELLO / THERE / YOU`) with compact line spacing, horizontal centering directly above the planet horizon, and a playful staggered GSAP spring entrance.
   - Rendered the miniature planet non-interactive (pointer dragging, touch rotation, zoom, and panning disabled; smooth automatic rotation active).
   - Recalibrated camera framing for generous breathing room around planet edges across desktop, tablet, mobile portrait, and landscape viewports.
-- **Prompt 05: The Living Town Experience**:
-  - Seamless cinematic transition from the rotating miniature planet into the walkable living town upon pressing `ENTER`.
-  - Continuous 60-second seamless ambient soundtrack with zero seam pops, uninterrupted across transitions.
-  - Stylized 3D player avatar representing Shiv Kumar with procedural walking animations, head turning, and movement kinematics.
-  - Locomotion engine supporting WASD / Arrow keys, click / tap ground raycasting, building collision detection, and third-person follow camera.
-  - Exactly 6 primary functional destination landmarks with custom 3D models, floating beacons, and rich storybook drawers:
-    1. **Little House** (`about`) — About Shiv Kumar, background, passions, and philosophy.
-    2. **University** (`education`) — Techno India University, B.Tech CSE, Cloud Computing specialization.
-    3. **Workshop** (`experience`) — Practical engineering, open-source systems, and cloud craft (100% honest, zero fabricated employment).
-    4. **Invention House** (`projects`) — Shadow Exchange, ASTRA, Faultline, ForgeFit, VEENA (real GitHub links, live tech stacks).
-    5. **Library** (`skills`) — Cloud & Infrastructure, Systems & Backend, WebGL & 3D, Methodologies.
-    6. **Post Office** (`contact`) — Direct email (`shivkumar6990655@gmail.com`), GitHub, LinkedIn, Résumé.
-  - 5 animated NPC guides (Barnaby, Timothy, Maeve, Pip, Clara) with idle breathing, head tracking, speech bubble dialogues, and destination navigation assistance.
-  - Richly populated terrain: 17 total buildings, 8 terrain features, 5 cobblestone paths, and 32 hand-crafted props.
-  - Town HUD: Quick-travel compass bar, proximity prompts (`[E] to Explore / Talk`), controls hint pill, and "Return to Orbit" button.
+- **Prompt 05: Complete Painterly Anime World Redesign**:
+  - Replaced the low-poly/geometric look with a soft painterly anime aesthetic inspired by 1980s-90s animated classics (Studio Ghibli, watercolor & gouache illustrations, warm countryside, organic silhouettes).
+  - Defined `ANIME_PALETTE` (`src/styles/painterlyPalette.ts`): lush meadow greens, olive foliage, cream plaster, warm terracotta clay roofs, slate blue-grey, aged copper verdigris, and turquoise waters.
+  - **ONE Continuous World (Critical Architectural Mandate)**: The miniature planet and close-up walkable town are now the **exact same physical 3D world** rendered through `PainterlyPlanet.tsx`.
+  - Continuous camera zoom with zero scene swapping or blackout fades (`ContinuousCameraController` glides smoothly from orbit $z \approx 17.4$ down to town level $z \approx 6.2$).
+  - Upgraded canonical world manifest to **v4.0.0** (`CANONICAL_WORLD`) featuring:
+    - **24 unique buildings** (6 functional destinations + 18 decorative scenery buildings).
+    - Topographical displacement engine (`getWorldElevation` in `src/world/projection.ts`) creating natural bluffs, ridges, and ponds.
+    - 5 animated NPC guides with contextual dialogues.
+    - 35 hand-crafted painterly anime props (layered foliage clumps, apple trees, weeping willows, stone fountain with water ripples, bridges, rowboats).
+    - Displaced spherical mesh with custom painterly vertex colors and nested turquoise water bodies.
+  - Verified 100% across the complete 16-viewport responsive test suite.
 
 ---
 

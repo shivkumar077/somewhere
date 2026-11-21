@@ -47,7 +47,14 @@ export type BuildingType =
   | 'tea-house'
   | 'lighthouse'
   | 'blacksmith-workshop'
-  | 'weaver-house';
+  | 'weaver-house'
+  | 'apothecary'
+  | 'miller-house'
+  | 'barn-hayloft'
+  | 'cider-shed'
+  | 'apiary-cottage'
+  | 'pier-pavilion'
+  | 'harbor-office';
 
 export type PropType =
   | 'tree-round'
@@ -118,8 +125,8 @@ export interface BuildingItem {
   };
   metadata: {
     storySnippet: string;
-    residentOrPurpose: string;
-    milestoneIntroduced: number;
+    residentOrPurpose?: string;
+    milestoneIntroduced?: number;
     interactionTargetId?: string;
     amenities?: string[];
     tags?: string[];
@@ -130,7 +137,7 @@ export interface BuildingItem {
 export interface PropItem {
   id: string;
   type: PropType;
-  assetKey: string;
+  assetKey?: string;
   coordinates: CanonicalCoordinates;
   rotationY: number; // in degrees
   scale?: [number, number, number] | number;
@@ -179,6 +186,7 @@ export interface NPCEntity {
   rotationY: number;
   dialogue: string[];
   guidedDestination?: DestinationType;
+  destinationHint?: DestinationType;
   visualTheme: {
     jacketColor: string;
     hatColor?: string;

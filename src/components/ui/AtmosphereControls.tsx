@@ -23,8 +23,8 @@ export const AtmosphereControls: React.FC<AtmosphereControlsProps> = ({
       data-testid="atmosphere-controls"
       style={{
         position: 'absolute',
-        top: 'max(14px, var(--sat))',
-        right: 'max(14px, var(--sar))',
+        top: isNarrowFoldable || isSmallMobile ? '10px' : 'max(14px, var(--sat))',
+        right: isNarrowFoldable || isSmallMobile ? '10px' : 'max(14px, var(--sar))',
         zIndex: 25,
         display: 'flex',
         flexDirection: 'column',

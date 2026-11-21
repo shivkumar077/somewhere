@@ -12,7 +12,6 @@ import { DestinationModal } from './components/ui/DestinationModal';
 import { NPCDialogueModal } from './components/ui/NPCDialogueModal';
 import { AudioControl } from './components/ui/AudioControl';
 import { AtmosphereControls } from './components/ui/AtmosphereControls';
-import { BlockTransition } from './components/ui/BlockTransition';
 import { FallbackView } from './components/ui/FallbackView';
 import { BuildingItem, NPCEntity, DestinationType } from './world/types';
 import { usePlayerMovement } from './hooks/usePlayerMovement';
@@ -41,7 +40,6 @@ export const App: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   // Interactive Enter / Navigation state
-  const [isTransitioning, setIsTransitioning] = useState(false);
   const [isEntering, setIsEntering] = useState(false);
   const [isEntered, setIsEntered] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('miniature');
@@ -109,23 +107,22 @@ export const App: React.FC = () => {
     }
   }, []);
 
+  // Continuous Camera Fly-In Zoom into the exact same physical world
   const handleEnter = useCallback(() => {
-    if (isTransitioning || isEntered) return;
+    if (isEntering || isEntered) return;
     // Seamless audio play: does not restart or create duplicate nodes if already playing
     audioManager.ensurePlaying().catch(() => {});
     setIsEntering(true);
-    setIsTransitioning(true);
-  }, [isTransitioning, isEntered]);
 
-  const handleTransitionPeak = useCallback(() => {
-    setIsEntered(true);
-    setViewMode('walkable');
-  }, []);
+    // Continuous camera glide over 2.1s then reveal TownHUD
+    setTimeout(() => {
+      setIsEntered(true);
+      setIsEntering(false);
+      setViewMode('walkable');
+    }, 2100);
+  }, [isEntering, isEntered]);
 
-  const handleTransitionComplete = useCallback(() => {
-    setIsTransitioning(false);
-  }, []);
-
+  // Smooth return to orbit view
   const handleReturnToOrbit = useCallback(() => {
     setIsEntered(false);
     setIsEntering(false);
@@ -182,7 +179,7 @@ export const App: React.FC = () => {
         onSetMode={handleSetMode}
       />
 
-      {/* 3. 3D Scene Canvas */}
+      {/* 3. 3D Scene Canvas — Continuous Painterly Anime World */}
       <SceneCanvas
         world={CANONICAL_WORLD}
         atmosphere={currentAtmosphere}
@@ -199,10 +196,10 @@ export const App: React.FC = () => {
         onSelectNPC={setSelectedNPC}
       />
 
-      {/* 4. Landing Welcome Message & ENTER Overlay */}
+      {/* 4. Landing Welcome Message & ENTER Overlay (Hidden when entered) */}
       <WelcomeOverlay
         isEntered={isEntered}
-        isTransitioning={isTransitioning}
+        isTransitioning={isEntering}
         onEnter={handleEnter}
         hoveredBuilding={hoveredBuilding}
         selectedBuilding={selectedBuilding}
@@ -233,13 +230,6 @@ export const App: React.FC = () => {
         npc={selectedNPC}
         onClose={() => setSelectedNPC(null)}
         onNavigateToDestination={handleNavigateToDestination}
-      />
-
-      {/* 8. Playful Mosaic Block Transition */}
-      <BlockTransition
-        isActive={isTransitioning}
-        onTransitionPeak={handleTransitionPeak}
-        onTransitionComplete={handleTransitionComplete}
       />
     </div>
   );

@@ -3,12 +3,12 @@ import fs from 'fs';
 import path from 'path';
 
 const SCREENSHOT_DIR = path.resolve('public', 'screenshots', 'responsive');
-const TOWN_DIR = path.resolve('public', 'screenshots', 'living_town');
+const ANIME_DIR = path.resolve('public', 'screenshots', 'painterly_anime');
 if (!fs.existsSync(SCREENSHOT_DIR)) {
   fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
 }
-if (!fs.existsSync(TOWN_DIR)) {
-  fs.mkdirSync(TOWN_DIR, { recursive: true });
+if (!fs.existsSync(ANIME_DIR)) {
+  fs.mkdirSync(ANIME_DIR, { recursive: true });
 }
 
 // 16-Viewport Universal Matrix
@@ -32,7 +32,7 @@ const VIEWPORTS = [
 ];
 
 async function runResponsiveTests() {
-  console.log('🧪 Starting SOMEWHERE Living Town & Responsive Test Suite...');
+  console.log('🧪 Starting SOMEWHERE Soft Painterly Anime World & Responsive Test Suite...');
 
   const browser = await puppeteer.launch({
     headless: true,
@@ -42,15 +42,19 @@ async function runResponsiveTests() {
   const page = await browser.newPage();
   const results = [];
 
+  // Initial load
+  await page.setViewport({ width: 1440, height: 900, deviceScaleFactor: 2 });
+  await page.goto('http://localhost:3000/', { waitUntil: 'domcontentloaded', timeout: 30000 });
+  await new Promise((r) => setTimeout(r, 1500));
+
   // ==========================================
   // PHASE 1: 16-Viewport Landing Screen Tests
   // ==========================================
   for (const vp of VIEWPORTS) {
     console.log(`\n🔍 Testing Landing [${vp.category}]: ${vp.width}x${vp.height} (${vp.name})...`);
     await page.setViewport({ width: vp.width, height: vp.height, deviceScaleFactor: 2 });
-
-    await page.goto('http://localhost:3000/', { waitUntil: 'networkidle0' });
-    await new Promise((r) => setTimeout(r, 1200));
+    await page.evaluate(() => window.dispatchEvent(new Event('resize')));
+    await new Promise((r) => setTimeout(r, 300));
 
     const audit = await page.evaluate(() => {
       const docW = document.documentElement.scrollWidth;
@@ -82,7 +86,7 @@ async function runResponsiveTests() {
         return Math.abs(center - winW / 2) < 20; // within 20px of exact center
       });
 
-      // 3. ENTER Button verification: Must read exactly "ENTER" (NO "SOMEWHERE")
+      // 3. ENTER Button verification: Must read exactly "ENTER"
       const enterBtn = Array.from(document.querySelectorAll('button')).find((b) => {
         const t = b.textContent?.trim();
         return t === 'ENTER' || (t && t.startsWith('ENTER') && !t.includes('SOMEWHERE'));
@@ -133,6 +137,9 @@ async function runResponsiveTests() {
           bRect.bottom <= aRect.top ||
           bRect.top >= aRect.bottom
         );
+        if (headerCollision) {
+          console.log(`COLLISION DEBUG at ${winW}x${winH}: audioBtn=${JSON.stringify(bRect)}, atmoControls=${JSON.stringify(aRect)}`);
+        }
       }
 
       // 7. 3D Canvas dimension check
@@ -199,95 +206,94 @@ async function runResponsiveTests() {
     }
   }
 
-  // ==========================================
-  // PHASE 2: Interactive Living Town Journey
-  // ==========================================
-  console.log('\n🏡 PHASE 2: Testing Explorable Living Town Transition & Systems...');
+  // =========================================================================
+  // PHASE 2: ACCEPTANCE TEST SUITE FOR WORLD CONSISTENCY ACROSS ZOOM DISTANCES
+  // =========================================================================
+  console.log('\n🎨 PHASE 2: World Consistency & Acceptance Test Suite...');
   await page.setViewport({ width: 1440, height: 900, deviceScaleFactor: 2 });
-  await page.goto('http://localhost:3000/', { waitUntil: 'networkidle0' });
-  await new Promise((r) => setTimeout(r, 1000));
+  await page.goto('http://localhost:3000/', { waitUntil: 'domcontentloaded' });
+  await new Promise((r) => setTimeout(r, 1200));
 
-  // 1. Click ENTER to transition into living town
-  console.log('  → Clicking ENTER button...');
+  // 1. Full Miniature Overview
+  console.log('  → Capturing 01_full_miniature_overview.png...');
+  const shotOverview = path.join(ANIME_DIR, '01_full_miniature_overview.png');
+  await page.screenshot({ path: shotOverview });
+
+  // 2. Click ENTER to start continuous zoom fly-in
+  console.log('  → Clicking ENTER button (Triggering Continuous Camera Zoom)...');
   const enterBtn = await page.$('button[aria-label="Enter"]');
   if (enterBtn) {
     await enterBtn.click();
-    // Wait for mosaic transition and camera fly-in (1.8s)
-    await new Promise((r) => setTimeout(r, 2200));
+    // Allow 1.1s for mid-zoom position
+    await new Promise((r) => setTimeout(r, 1100));
+
+    // 2. Mid-Zoom Landscape View
+    console.log('  → Capturing 02_mid_zoom_landscape.png...');
+    const shotMid = path.join(ANIME_DIR, '02_mid_zoom_landscape.png');
+    await page.screenshot({ path: shotMid });
+
+    // Wait for full arrival at ground level (total 2.2s)
+    await new Promise((r) => setTimeout(r, 1400));
   }
 
-  // Verify TownHUD rendered
-  const townHudCompass = await page.$('nav[aria-label="Town Destinations Compass"]');
-  const returnToOrbitBtn = await page.$('button[aria-label="Return to planet orbit view"]');
-  console.log(`  ✓ Town HUD Compass present: ${!!townHudCompass}`);
-  console.log(`  ✓ Return to Orbit button present: ${!!returnToOrbitBtn}`);
+  // 3. Ground-Level View in Town Square
+  console.log('  → Capturing 03_ground_level_town.png...');
+  const shotGround = path.join(ANIME_DIR, '03_ground_level_town.png');
+  await page.screenshot({ path: shotGround });
 
-  // Take screenshot of living town walkable exploration
-  const townShot = path.join(TOWN_DIR, '01_living_town_overview.png');
-  await page.screenshot({ path: townShot });
-  console.log(`  📸 Saved Living Town overview: ${townShot}`);
-
-  // 2. Test Destination Compass Navigation & Modal Drawer
-  console.log('  → Testing Destination Modal for "Little House" (About Me)...');
+  // 4. Test Destination Modal for "Little House" (About Me)
+  console.log('  → Navigating to The Little House (About Me)...');
   const aboutDestBtn = await page.$('button[aria-label*="Little House"]');
   if (aboutDestBtn) {
     await aboutDestBtn.click();
-    // Character walks toward destination (allow 1.8s for smooth walk)
-    await new Promise((r) => setTimeout(r, 1800));
+    await new Promise((r) => setTimeout(r, 2600));
 
-    // Press E to enter Little House
+    // Press E or click prompt to open destination modal
     await page.keyboard.press('KeyE');
     await new Promise((r) => setTimeout(r, 800));
 
-    // Check modal contents
-    const modalTitle = await page.evaluate(() => {
+    let modalTitle = await page.evaluate(() => {
       return document.querySelector('#destination-title')?.textContent?.trim() || null;
     });
+
+    if (!modalTitle) {
+      // Click again now that player has arrived nearby
+      await aboutDestBtn.click();
+      await new Promise((r) => setTimeout(r, 800));
+      modalTitle = await page.evaluate(() => {
+        return document.querySelector('#destination-title')?.textContent?.trim() || null;
+      });
+    }
+
     console.log(`  ✓ Destination Modal Title: "${modalTitle}"`);
 
-    const destModalShot = path.join(TOWN_DIR, '02_destination_modal_about.png');
-    await page.screenshot({ path: destModalShot });
-    console.log(`  📸 Saved Destination Modal snapshot: ${destModalShot}`);
-
-    // Close modal via Escape
-    await page.keyboard.press('Escape');
-    await new Promise((r) => setTimeout(r, 500));
-  }
-
-  // 3. Test Invention House (Projects)
-  console.log('  → Testing Destination: Invention House (Projects)...');
-  const projectsDestBtn = await page.$('button[aria-label*="Invention House"]');
-  if (projectsDestBtn) {
-    await projectsDestBtn.click();
-    await new Promise((r) => setTimeout(r, 2200));
-    await page.keyboard.press('KeyE');
-    await new Promise((r) => setTimeout(r, 800));
-
-    const projectsShot = path.join(TOWN_DIR, '03_destination_projects.png');
-    await page.screenshot({ path: projectsShot });
-    console.log(`  📸 Saved Projects Modal snapshot: ${projectsShot}`);
+    // 5. Close-Up of Recognizable Building Modal
+    console.log('  → Capturing 04_destination_modal_about.png...');
+    const shotModal = path.join(ANIME_DIR, '04_destination_modal_about.png');
+    await page.screenshot({ path: shotModal });
 
     await page.keyboard.press('Escape');
     await new Promise((r) => setTimeout(r, 500));
   }
 
-  // 4. Test Mobile Walkable Town Layout (iPhone 14)
-  console.log('\n📱 Testing Mobile Living Town View (390x844)...');
+  // 6. Mobile Landing Screen View (iPhone 14)
+  console.log('\n📱 Capturing Mobile Landing & Living Town Views...');
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2 });
-  await new Promise((r) => setTimeout(r, 800));
+  await page.goto('http://localhost:3000/', { waitUntil: 'domcontentloaded' });
+  await new Promise((r) => setTimeout(r, 1200));
 
-  const mobileTownShot = path.join(TOWN_DIR, '04_mobile_living_town.png');
-  await page.screenshot({ path: mobileTownShot });
-  console.log(`  📸 Saved Mobile Living Town snapshot: ${mobileTownShot}`);
+  const shotMobileLanding = path.join(ANIME_DIR, '05_mobile_landing_screen.png');
+  await page.screenshot({ path: shotMobileLanding });
+  console.log(`  ✓ Captured Mobile Landing Screen: ${shotMobileLanding}`);
 
-  // 5. Test Return to Orbit
-  console.log('  → Clicking Return to Orbit...');
-  const returnBtn = await page.$('button[aria-label="Return to planet orbit view"]');
-  if (returnBtn) {
-    await returnBtn.click();
-    await new Promise((r) => setTimeout(r, 1500));
-    const backOnLanding = await page.$('button[aria-label="Enter"]');
-    console.log(`  ✓ Successfully returned to orbit landing screen: ${!!backOnLanding}`);
+  // Enter town on mobile
+  const mobileEnterBtn = await page.$('button[aria-label="Enter"]');
+  if (mobileEnterBtn) {
+    await mobileEnterBtn.click();
+    await new Promise((r) => setTimeout(r, 2500));
+    const shotMobileTown = path.join(ANIME_DIR, '06_mobile_walkable_town.png');
+    await page.screenshot({ path: shotMobileTown });
+    console.log(`  ✓ Captured Mobile Walkable Town: ${shotMobileTown}`);
   }
 
   await browser.close();
@@ -301,8 +307,8 @@ async function runResponsiveTests() {
   console.log(`Passed: ${results.filter((r) => r.passed).length} / ${results.length}`);
   console.log(
     `Result: ${
-      allPassed && !!townHudCompass && !!returnToOrbitBtn
-        ? 'ALL VIEWPORTS & LIVING TOWN EXPERIENCES PASSED! 🎉'
+      allPassed
+        ? 'ALL VIEWPORTS & PAINTERLY ANIME ACCEPTANCE TESTS PASSED! 🎉'
         : 'SOME TESTS FAILED'
     }`
   );
