@@ -16,6 +16,32 @@ const MENU_ITEMS: MenuItem[] = [
   { num: '06', title: 'CONTACT', id: 'contact' },
 ];
 
+// Ensure default character is a stylish boy preset in localStorage
+try {
+  const saved = localStorage.getItem('App3D_data');
+  if (saved) {
+    const data = JSON.parse(saved);
+    if (data.modelFiles && Array.isArray(data.modelFiles)) {
+      if (
+        data.modelFiles.includes('hair1') ||
+        data.modelFiles.includes('hair2') ||
+        data.modelFiles.includes('bottom1') ||
+        data.modelFiles.includes('bottom2')
+      ) {
+        data.modelFiles = ['base', 'hair7', 'top7', 'bottom7', 'shoes1'];
+        localStorage.setItem('App3D_data', JSON.stringify(data));
+      }
+    }
+  } else {
+    localStorage.setItem(
+      'App3D_data',
+      JSON.stringify({
+        modelFiles: ['base', 'hair7', 'top7', 'bottom7', 'shoes1'],
+      })
+    );
+  }
+} catch (e) {}
+
 export const App: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
