@@ -1,6 +1,4 @@
 import React, { useEffect, useState, useRef } from 'react';
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { PortfolioSection } from './LetterModal';
 
 interface Vec3 {
@@ -88,19 +86,12 @@ const NPC_CONFIGS: NPCConfig[] = [
     id: 'fox',
     section: 'cv',
     label: 'CV DOCUMENT',
-    name: 'Suto the Cat',
-    icon: '🐱',
+    name: 'Soto the Fox',
+    icon: '🦊',
     fallbackPos: [-8.36976, -20.368, 10.0339],
     color: '#ff85a2',
   },
 ];
-
-interface LoadedCat {
-  wrapper: THREE.Group;
-  model: THREE.Object3D;
-  mixer: THREE.AnimationMixer;
-  action: THREE.AnimationAction;
-}
 
 interface ScreenBadge {
   id: string;
@@ -143,89 +134,6 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
   } | null>(null);
 
   const activeSprintRef = useRef<ActiveSprint | null>(null);
-  const catRef = useRef<LoadedCat | null>(null);
-
-  // Module-level cached loader for knight_cat so it loads only ONCE and never reloads
-  useEffect(() => {
-    // Check if window cached cat exists
-    const cachedGLTF = (window as any)._cachedKnightCatGLTF;
-    const processGLTF = (gltf: any) => {
-      const catModel = gltf.scene.clone(true);
-      // Feet alignment offset: bottom of knight_cat is around -0.55m, so offset up
-      catModel.position.set(0, 0.55, 0);
-      // Prominent, clear knight cat scale
-      catModel.scale.set(0.48, 0.48, 0.48);
-
-      // Apply hand-drawn cel-shaded art style matching the website
-      catModel.traverse((child: any) => {
-        if (child.isMesh) {
-          child.castShadow = true;
-          child.receiveShadow = true;
-          child.frustumCulled = false;
-          if (child.geometry) {
-            if (!child.geometry.updateRanges) child.geometry.updateRanges = [];
-            if (child.geometry.attributes) {
-              Object.values(child.geometry.attributes).forEach((attr: any) => {
-                if (attr && !attr.updateRanges) attr.updateRanges = [];
-              });
-            }
-          }
-          const oldMap = child.material?.map;
-          if (oldMap && !oldMap.updateRanges) oldMap.updateRanges = [];
-          child.material = new THREE.MeshToonMaterial({
-            map: oldMap || null,
-            color: 0xffffff,
-          });
-          if (child.material.map && !child.material.map.updateRanges) {
-            child.material.map.updateRanges = [];
-          }
-        }
-      });
-
-      const wrapper = new THREE.Group();
-      wrapper.name = 'suto_cat_courier';
-      const defaultFoxPos = new THREE.Vector3(-8.36976, -20.368, 10.0339);
-      const up = defaultFoxPos.clone().normalize();
-      wrapper.position.copy(defaultFoxPos);
-      wrapper.up.copy(up);
-      wrapper.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), up);
-      wrapper.add(catModel);
-      wrapper.visible = true; // Always visible in world!
-
-      let mixer: any = null;
-      let action: any = null;
-      if (gltf.animations && gltf.animations.length > 0) {
-        mixer = new THREE.AnimationMixer(catModel);
-        action = mixer.clipAction(gltf.animations[0]);
-        action.setEffectiveTimeScale(1.3);
-        action.play();
-      }
-
-      catRef.current = { wrapper, model: catModel, mixer, action };
-    };
-
-    if (cachedGLTF) {
-      processGLTF(cachedGLTF);
-      return;
-    }
-
-    const loader = new GLTFLoader();
-    loader.load(
-      '/assets/knight_cat.glb',
-      (gltf) => {
-        (window as any)._cachedKnightCatGLTF = gltf;
-        processGLTF(gltf);
-      },
-      undefined,
-      (err) => {
-        console.warn('Failed to load knight cat model, falling back to toon_cat:', err);
-        loader.load('/assets/toon_cat_free.glb', (fbGltf) => {
-          (window as any)._cachedKnightCatGLTF = fbGltf;
-          processGLTF(fbGltf);
-        });
-      }
-    );
-  }, []);
 
   // Press E to interact when close
   useEffect(() => {
@@ -243,11 +151,11 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
 
   // Direct hand-off when interacting close up
   const triggerHandOff = (section: PortfolioSection, npcName: string) => {
-    const isCat = section === 'cv';
+    const isFox = section === 'cv';
     setDeliveryToast({
-      text: isCat ? `🐱 CV Delivered by Suto!` : `✉ Letter Delivered by ${npcName}!`,
-      sub: isCat
-        ? `Suto: "Meow! Here is Shiv's CV document!"`
+      text: isFox ? `🦊 CV Delivered by Soto!` : `✉ Letter Delivered by ${npcName}!`,
+      sub: isFox
+        ? `Soto: "Here is Shiv's CV document! Ready to read!"`
         : `Here is Shiv's ${section.toUpperCase()} portfolio letter!`,
     });
     setTimeout(() => setDeliveryToast(null), 3000);
@@ -280,15 +188,11 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
         }
       } catch (err) { }
 
-      // Keep Suto sitting happily with the player for 10s after closing so user clearly sees Suto!
+      // Return runner to their original station after 6s
       setTimeout(() => {
         if (activeSprintRef.current) {
           const s = activeSprintRef.current;
-          if (s.npcId === 'suto' && catRef.current) {
-            // Suto gently returns to his home station
-            catRef.current.wrapper.position.set(15.8793, 16.9006, 11.2543);
-            catRef.current.wrapper.visible = true;
-          } else if (s.originalPos && s.npcMesh) {
+          if (s.originalPos && s.npcMesh) {
             s.npcMesh.position.set(s.originalPos.x, s.originalPos.y, s.originalPos.z);
             if (s.npcMesh._targetPosition) {
               s.npcMesh._targetPosition.set(s.originalPos.x, s.originalPos.y, s.originalPos.z);
@@ -297,7 +201,7 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
           }
           activeSprintRef.current = null;
         }
-      }, 10000);
+      }, 6000);
     };
 
     window.addEventListener('summon_portfolio_npc', handleSummon);
@@ -311,7 +215,7 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
     };
   }, []);
 
-  // Summon NPC with a clear, cinematic sprint across the terrain (taking ~4s)
+  // Summon NPC with a clear, cinematic sprint across the terrain (taking ~3s)
   const summonNPC = (section: PortfolioSection) => {
     const config = NPC_CONFIGS.find((c) => c.section === section) || NPC_CONFIGS[0];
 
@@ -325,19 +229,7 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
     }
 
     const npcEntry = scene.npcs?.find((n: any) => n.options?.id === config.id);
-    let npcMesh = npcEntry?.mesh;
-
-    // Suto the cat uses our high-quality rigged and running toon cat model
-    if (section === 'cv' && catRef.current) {
-      npcMesh = catRef.current.wrapper;
-      catRef.current.wrapper.visible = true;
-      if (scene && catRef.current.wrapper.parent !== scene) {
-        scene.add(catRef.current.wrapper);
-      }
-      if (catRef.current.action) {
-        catRef.current.action.reset().play();
-      }
-    }
+    const npcMesh = npcEntry?.mesh;
 
     const pPos: Vec3 = {
       x: playerObj.position.x,
@@ -387,8 +279,8 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
     };
 
     // Spawn in direct line-of-sight in front of the camera & player
-    const isCat = section === 'cv';
-    const spawnDist = isCat ? 6.5 : 10.0;
+    const isFox = section === 'cv';
+    const spawnDist = isFox ? 7.0 : 10.0;
     const rawSpawn = vAdd(pPos, vMul(forwardTangent, spawnDist));
     const spawnPoint = snapToGround(vMul(vNorm(rawSpawn), planetRadius));
 
@@ -407,13 +299,18 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
       (window as any)._sprintActive = true;
       npcMesh._sprintActive = true;
       npcMesh._visibilityThreshold = 9999;
+      npcMesh.visible = true;
 
+      const spawnUp = vNorm(spawnPoint);
       npcMesh.position.set(spawnPoint.x, spawnPoint.y, spawnPoint.z);
+      if (npcMesh.up && typeof npcMesh.up.set === 'function') {
+        npcMesh.up.set(spawnUp.x, spawnUp.y, spawnUp.z);
+      }
       if (npcMesh._targetPosition) {
         npcMesh._targetPosition.set(spawnPoint.x, spawnPoint.y, spawnPoint.z);
       }
       if (typeof npcMesh.lookAt === 'function') {
-        npcMesh.lookAt(pPos.x, pPos.y, pPos.z);
+        npcMesh.lookAt(targetPoint.x, targetPoint.y, targetPoint.z);
       }
 
       activeSprintRef.current = {
@@ -421,7 +318,7 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
         section: section,
         npcName: config.name,
         startTime: performance.now(),
-        duration: isCat ? 2200 : 3200,
+        duration: isFox ? 2400 : 3200,
         spawnPoint,
         targetPoint,
         planetRadius,
@@ -453,18 +350,14 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
         const progress = Math.min(1, elapsed / sprint.duration);
 
         if (sprint.stage === 'running') {
-          // Advance Suto the cat's running animation mixer if sprinting
-          if (sprint.npcId === 'suto' && catRef.current?.mixer) {
-            catRef.current.mixer.update(0.024);
-          }
           // Dynamic HUD readout showing runner approaching
           const remainingMeters = Math.max(1, Math.round((1 - progress) * 14));
-          const isCat = sprint.npcId === 'fox' || sprint.section === 'cv';
+          const isFox = sprint.npcId === 'fox' || sprint.section === 'cv';
           setDeliveryToast({
-            text: isCat
-              ? `🐾 Suto is coming to deliver your CV!`
+            text: isFox
+              ? `🦊 Soto is coming to deliver your CV!`
               : `🏃 ${sprint.npcName} is running to you!`,
-            sub: isCat
+            sub: isFox
               ? `Delivering Shiv's CV document...`
               : `Delivering Shiv's ${sprint.section.toUpperCase()} letter...`,
             distance: `${remainingMeters}m away`,
@@ -526,16 +419,16 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
               sprint.npcMesh.lookAt(playerObj.position.x, playerObj.position.y, playerObj.position.z);
             }
 
-            const isCat = sprint.npcId === 'fox' || sprint.npcId === 'suto' || sprint.section === 'cv';
+            const isFoxArrival = sprint.npcId === 'fox' || sprint.section === 'cv';
             setDeliveryToast({
-              text: isCat ? `🐱 CV Delivered by Suto!` : `✉ Letter Handed to You!`,
-              sub: isCat
-                ? `Suto: "Meow! Here is Shiv's CV document! Ready to read!"`
+              text: isFoxArrival ? `🦊 CV Delivered by Soto!` : `✉ Letter Handed to You!`,
+              sub: isFoxArrival
+                ? `Soto: "Here is Shiv's CV document! Ready to read!"`
                 : `${sprint.npcName}: "Special delivery! Here is Shiv's ${sprint.section.toUpperCase()} letter!"`,
               distance: 'Delivered',
             });
 
-            // Hand-off pause: let the user see Suto standing right in front of them with the letter!
+            // Hand-off pause: let the user see Soto standing right in front of them with the letter!
             setTimeout(() => {
               (window as any)._sprintActive = false;
               onOpenLetter(sprint.section);
@@ -554,32 +447,11 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
         }
       }
 
-      // Ensure Suto is permanently added to scene and animated
-      if (scene && catRef.current) {
-        if (catRef.current.wrapper.parent !== scene) {
-          scene.add(catRef.current.wrapper);
-        }
-        // Permanently hide the sleeping fox model from App3D so only our 3D cat Suto is active
-        if (scene.npcs) {
-          const fox = scene.npcs.find((n: any) => n.options?.id === 'fox');
-          if (fox && fox.mesh) {
-            fox.mesh.visible = false;
-            // If Suto is not sprinting, keep him stationed at the fox's spot on the planet ground
-            if (!activeSprintRef.current && fox.mesh.position) {
-              const fPos = fox.mesh.position;
-              const fUp = fPos.clone().normalize();
-              catRef.current.wrapper.position.copy(fPos);
-              catRef.current.wrapper.up.copy(fUp);
-              catRef.current.wrapper.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), fUp);
-            }
-          }
-        }
-        if (catRef.current.mixer) {
-          catRef.current.mixer.update(0.018);
-        } else if (!activeSprintRef.current && catRef.current.model) {
-          // Gentle idle bobbing/breathing animation for Knight Cat
-          const t = now * 0.003;
-          catRef.current.model.position.y = 0.55 + Math.sin(t) * 0.03;
+      // Ensure all NPCs including Fox (Soto) remain visible in the scene
+      if (scene && scene.npcs) {
+        const fox = scene.npcs.find((n: any) => n.options?.id === 'fox');
+        if (fox && fox.mesh && !activeSprintRef.current) {
+          fox.mesh.visible = true;
         }
       }
 
@@ -613,13 +485,7 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
             let worldY = cfg.fallbackPos[1];
             let worldZ = cfg.fallbackPos[2];
 
-            if (cfg.id === 'fox' || cfg.id === 'suto') {
-              if (catRef.current && catRef.current.wrapper) {
-                worldX = catRef.current.wrapper.position.x;
-                worldY = catRef.current.wrapper.position.y;
-                worldZ = catRef.current.wrapper.position.z;
-              }
-            } else if (scene && scene.npcs) {
+            if (scene && scene.npcs) {
               const entry = scene.npcs.find((n: any) => n.options?.id === cfg.id);
               if (entry && entry.mesh) {
                 worldX = entry.mesh.position.x;
@@ -628,7 +494,7 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
               }
             }
 
-            const headY = (cfg.id === 'suto' || cfg.id === 'fox') ? worldY + 1.25 : worldY + 1.85;
+            const headY = cfg.id === 'fox' ? worldY + 1.15 : worldY + 1.85;
 
             let dist = 100;
             if (playerPos) {
@@ -736,8 +602,8 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
                   animation: b.isClose || isRunner ? 'badgePulse 1.2s infinite' : 'none',
                 }}
               >
-                <span style={{ fontSize: '14px' }}>{isRunner ? (b.id === 'fox' || b.id === 'suto' ? '🐱' : '🏃') : b.icon}</span>
-                <span>{isRunner ? (b.id === 'fox' || b.id === 'suto' ? 'SUTO DELIVERING CV' : `DELIVERING ${b.label}`) : b.label}</span>
+                <span style={{ fontSize: '14px' }}>{isRunner ? (b.id === 'fox' ? '🦊' : '🏃') : b.icon}</span>
+                <span>{isRunner ? (b.id === 'fox' ? 'SOTO DELIVERING CV' : `DELIVERING ${b.label}`) : b.label}</span>
                 {b.isClose && !isRunner && (
                   <span
                     style={{
@@ -763,13 +629,13 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
                   color: '#ffffff',
                   textShadow: '0 1px 3px rgba(0,0,0,0.8), 0 0 2px #000',
                   marginTop: '2px',
-                  backgroundColor: (b.id === 'fox' || b.id === 'suto') && isRunner ? 'rgba(235, 94, 140, 0.95)' : isRunner ? 'rgba(217, 83, 79, 0.9)' : 'rgba(30, 37, 43, 0.7)',
+                  backgroundColor: b.id === 'fox' && isRunner ? 'rgba(235, 94, 140, 0.95)' : isRunner ? 'rgba(217, 83, 79, 0.9)' : 'rgba(30, 37, 43, 0.7)',
                   padding: '1.5px 7px',
                   borderRadius: '6px',
                   border: '1px solid rgba(255,255,255,0.3)',
                 }}
               >
-                {b.id === 'fox' || b.id === 'suto' ? '🐾 Suto the Cat' : b.name}
+                {b.id === 'fox' ? '🦊 Soto the Fox' : b.name}
               </span>
 
               {/* Pointer Arrow */}
