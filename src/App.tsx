@@ -231,6 +231,8 @@ export const App: React.FC = () => {
                 return (
                   <div
                     key={item.id}
+                    data-section={item.id}
+                    data-testid={`menu-item-${item.id}`}
                     onClick={() => handleMenuItemClick(item.id)}
                     onMouseEnter={() => setHoveredIdx(index)}
                     onMouseLeave={() => setHoveredIdx(null)}

@@ -1,6 +1,22 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { PortfolioSection } from './LetterModal';
 
+interface Vec3 {
+  x: number;
+  y: number;
+  z: number;
+}
+
+const vAdd = (a: Vec3, b: Vec3): Vec3 => ({ x: a.x + b.x, y: a.y + b.y, z: a.z + b.z });
+const vSub = (a: Vec3, b: Vec3): Vec3 => ({ x: a.x - b.x, y: a.y - b.y, z: a.z - b.z });
+const vMul = (a: Vec3, s: number): Vec3 => ({ x: a.x * s, y: a.y * s, z: a.z * s });
+const vDot = (a: Vec3, b: Vec3): number => a.x * b.x + a.y * b.y + a.z * b.z;
+const vLen = (a: Vec3): number => Math.hypot(a.x, a.y, a.z) || 1e-6;
+const vNorm = (a: Vec3): Vec3 => {
+  const l = vLen(a);
+  return { x: a.x / l, y: a.y / l, z: a.z / l };
+};
+
 interface NPCConfig {
   id: string;
   section: PortfolioSection;
@@ -13,13 +29,13 @@ interface NPCConfig {
 
 const NPC_CONFIGS: NPCConfig[] = [
   {
-    id: 'threekid',
-    section: 'projects',
-    label: 'PROJECTS',
-    name: 'Hacker Girl',
-    icon: '📂',
-    fallbackPos: [30.0128, 18.6118, -4.71063],
-    color: '#66BDE6',
+    id: 'mountainman',
+    section: 'about',
+    label: 'ABOUT',
+    name: 'Mountain Ranger',
+    icon: '👤',
+    fallbackPos: [-8.17226, 32.3472, -1.76941],
+    color: '#f4c430',
   },
   {
     id: 'female-scientist',
@@ -40,13 +56,13 @@ const NPC_CONFIGS: NPCConfig[] = [
     color: '#c25959',
   },
   {
-    id: 'mountainman',
-    section: 'about',
-    label: 'ABOUT',
-    name: 'Mountain Ranger',
-    icon: '👤',
-    fallbackPos: [-8.17226, 32.3472, -1.76941],
-    color: '#f4c430',
+    id: 'threekid',
+    section: 'projects',
+    label: 'PROJECTS',
+    name: 'Hacker Girl',
+    icon: '📂',
+    fallbackPos: [30.0128, 18.6118, -4.71063],
+    color: '#66BDE6',
   },
   {
     id: 'factory-worker-a',
@@ -91,33 +107,40 @@ interface ScreenBadge {
   visible: boolean;
 }
 
+interface ActiveSprint {
+  npcId: string;
+  section: PortfolioSection;
+  npcName: string;
+  startTime: number;
+  duration: number;
+  spawnPoint: Vec3;
+  targetPoint: Vec3;
+  planetRadius: number;
+  npcMesh: any;
+  originalPos: Vec3;
+  stage: 'running' | 'handing' | 'done';
+}
+
 interface WorldNPCBadgesProps {
   onOpenLetter: (section: PortfolioSection) => void;
 }
 
 export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) => {
   const [badges, setBadges] = useState<ScreenBadge[]>([]);
-  const [deliveryToast, setDeliveryToast] = useState<{ text: string; sub: string } | null>(null);
-  const toastTimeoutRef = useRef<number | null>(null);
-
-  // Sprinting animation states
-  const activeSprintRef = useRef<{
-    npcId: string;
-    section: PortfolioSection;
-    startTime: number;
-    duration: number;
-    startPos: { x: number; y: number; z: number };
-    targetOffset: { x: number; y: number; z: number };
-    npcObj: any;
-    originalPos?: { x: number; y: number; z: number };
+  const [deliveryToast, setDeliveryToast] = useState<{
+    text: string;
+    sub: string;
+    distance?: string;
   } | null>(null);
 
-  // Proximity interaction listener (Press 'E' to interact when close)
+  const activeSprintRef = useRef<ActiveSprint | null>(null);
+
+  // Press E to interact when close
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'e' || e.key === 'E') {
         const closest = badges.find((b) => b.isClose);
-        if (closest) {
+        if (closest && !activeSprintRef.current) {
           triggerHandOff(closest.section, closest.name);
         }
       }
@@ -126,27 +149,26 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [badges]);
 
-  // Handle letter open trigger
+  // Direct hand-off when interacting close up
   const triggerHandOff = (section: PortfolioSection, npcName: string) => {
     setDeliveryToast({
       text: `✉ Letter Delivered by ${npcName}!`,
       sub: `Here is Shiv's ${section.toUpperCase()} portfolio letter!`,
     });
-    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
-    toastTimeoutRef.current = window.setTimeout(() => setDeliveryToast(null), 3500);
-
-    // Open Letter Modal
+    setTimeout(() => setDeliveryToast(null), 3000);
     onOpenLetter(section);
   };
 
-  // Listen for custom summon events (from 3-line menu)
+  // Listen for summon and open events
   useEffect(() => {
     const handleSummon = (e: any) => {
-      const section = (e.detail?.section || 'education').toLowerCase() as PortfolioSection;
+      const section = (e.detail?.section || 'about').toLowerCase() as PortfolioSection;
       summonNPC(section);
     };
 
     const handleOpenLetterEvent = (e: any) => {
+      // If a sprint is currently running, ignore premature open events
+      if (activeSprintRef.current) return;
       const sec = (e.detail?.section || 'about').toLowerCase() as PortfolioSection;
       onOpenLetter(sec);
     };
@@ -160,78 +182,117 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
     };
   }, []);
 
-  // Summon function: NPC sprints to player under 2-3 seconds
+  // Summon NPC with a clear, cinematic sprint across the terrain (taking ~4s)
   const summonNPC = (section: PortfolioSection) => {
-    const config = NPC_CONFIGS.find((c) => c.section === section);
-    if (!config) return;
+    const config = NPC_CONFIGS.find((c) => c.section === section) || NPC_CONFIGS[0];
 
     const scene = (window as any)._planetScene;
     const playerObj = (window as any)._characters?.mesh?._localObject;
     const camera = (window as any)._camera;
 
     if (!scene || !playerObj) {
-      // Fallback: immediate open if 3D scene not ready
       triggerHandOff(section, config.name);
       return;
     }
 
-    // Find the NPC mesh in the scene
     const npcEntry = scene.npcs?.find((n: any) => n.options?.id === config.id);
     const npcMesh = npcEntry?.mesh;
 
-    const playerPos = playerObj.position;
+    const pPos: Vec3 = {
+      x: playerObj.position.x,
+      y: playerObj.position.y,
+      z: playerObj.position.z,
+    };
+    const planetRadius = vLen(pPos);
+    const playerUp = vNorm(pPos);
 
-    // Show delivery announcement toast
-    setDeliveryToast({
-      text: `🏃 ${config.name} is running to deliver your letter!`,
-      sub: `Arriving in ~2 seconds with Shiv's ${section.toUpperCase()} letter...`,
-    });
-    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
-    toastTimeoutRef.current = window.setTimeout(() => setDeliveryToast(null), 4000);
+    // Compute view direction from camera through player
+    let camPos: Vec3 = { x: 0, y: 0, z: 0 };
+    if (camera) {
+      camPos = { x: camera.position.x, y: camera.position.y, z: camera.position.z };
+    }
+    const camToPlayer = vNorm(vSub(pPos, camPos));
+
+    // Remove vertical component to get tangential forward vector on spherical ground
+    const dot = vDot(camToPlayer, playerUp);
+    let forwardTangent = vSub(camToPlayer, vMul(playerUp, dot));
+    if (vLen(forwardTangent) < 0.01) {
+      forwardTangent = { x: 0, y: 0, z: 1 };
+    }
+    forwardTangent = vNorm(forwardTangent);
+
+    // Collider & Raycaster from physics engine for exact terrain snapping
+    const collider = (window as any)._characters?.mesh?._collisionPhysics?._collider;
+    const raycaster = (window as any)._characters?.mesh?._collisionPhysics?._rayCaster;
+
+    const snapToGround = (pt: Vec3): Vec3 => {
+      if (collider && raycaster && playerObj) {
+        try {
+          const Vec3 = playerObj.position.constructor;
+          const up = vNorm(pt);
+          const r = vLen(pt);
+          const origin = new Vec3(up.x * (r + 15), up.y * (r + 15), up.z * (r + 15));
+          const dir = new Vec3(-up.x, -up.y, -up.z);
+          raycaster.set(origin, dir);
+          const hits = raycaster.intersectObject(collider, false);
+          if (hits && hits[0]) {
+            return { x: hits[0].point.x, y: hits[0].point.y, z: hits[0].point.z };
+          }
+        } catch {
+          // fallback
+        }
+      }
+      return pt;
+    };
+
+    // Spawn 14 units ahead in clear line-of-sight in front of the camera & player
+    const spawnDist = 14;
+    const rawSpawn = vAdd(pPos, vMul(forwardTangent, spawnDist));
+    const spawnPoint = snapToGround(vMul(vNorm(rawSpawn), planetRadius));
+
+    // Stop 1.4 units right in front of the player
+    const rawTarget = vAdd(pPos, vMul(forwardTangent, 1.4));
+    const targetPoint = snapToGround(vMul(vNorm(rawTarget), planetRadius));
 
     if (npcMesh) {
-      // Calculate a spawn point 12 units away from the player in view
-      let forward = { x: 0, y: 0, z: 1 };
-      if (camera) {
-        forward.x = playerPos.x - camera.position.x;
-        forward.y = playerPos.y - camera.position.y;
-        forward.z = playerPos.z - camera.position.z;
-        const len = Math.hypot(forward.x, forward.y, forward.z) || 1;
-        forward.x /= len;
-        forward.y /= len;
-        forward.z /= len;
+      const origPos: Vec3 = {
+        x: npcMesh.position.x,
+        y: npcMesh.position.y,
+        z: npcMesh.position.z,
+      };
+
+      // Set global flag to avoid premature dialog popups
+      (window as any)._sprintActive = true;
+      npcMesh._sprintActive = true;
+      npcMesh._visibilityThreshold = 9999;
+
+      npcMesh.position.set(spawnPoint.x, spawnPoint.y, spawnPoint.z);
+      if (npcMesh._targetPosition) {
+        npcMesh._targetPosition.set(spawnPoint.x, spawnPoint.y, spawnPoint.z);
+      }
+      if (typeof npcMesh.lookAt === 'function') {
+        npcMesh.lookAt(pPos.x, pPos.y, pPos.z);
       }
 
-      const spawnDistance = 12;
-      const startX = playerPos.x + forward.x * spawnDistance;
-      const startY = playerPos.y + forward.y * spawnDistance;
-      const startZ = playerPos.z + forward.z * spawnDistance;
-
-      const origPos = { x: npcMesh.position.x, y: npcMesh.position.y, z: npcMesh.position.z };
-
-      // Teleport to sprint start
-      npcMesh.position.set(startX, startY, startZ);
-
-      // Start sprint loop (duration 2.2 seconds)
       activeSprintRef.current = {
         npcId: config.id,
         section: section,
+        npcName: config.name,
         startTime: performance.now(),
-        duration: 2200, // ~2.2 seconds!
-        startPos: { x: startX, y: startY, z: startZ },
-        targetOffset: { x: forward.x * 1.3, y: forward.y * 1.3, z: forward.z * 1.3 },
-        npcObj: npcMesh,
+        duration: 4000, // 4.0 seconds: clearly visible running across the ground!
+        spawnPoint,
+        targetPoint,
+        planetRadius,
+        npcMesh,
         originalPos: origPos,
+        stage: 'running',
       };
     } else {
-      // If NPC mesh not found, trigger hand-off after 2 seconds
-      setTimeout(() => {
-        triggerHandOff(section, config.name);
-      }, 2000);
+      setTimeout(() => triggerHandOff(section, config.name), 2500);
     }
   };
 
-  // Main 3D projection & sprint animation loop
+  // Main animation frame loop
   useEffect(() => {
     let animId: number;
 
@@ -239,7 +300,8 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
       const scene = (window as any)._planetScene;
       const camera = (window as any)._camera;
       const playerObj = (window as any)._characters?.mesh?._localObject;
-
+      const collider = (window as any)._characters?.mesh?._collisionPhysics?._collider;
+      const raycaster = (window as any)._characters?.mesh?._collisionPhysics?._rayCaster;
       const now = performance.now();
 
       // Handle active sprint animation
@@ -248,97 +310,174 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
         const elapsed = now - sprint.startTime;
         const progress = Math.min(1, elapsed / sprint.duration);
 
-        // Ease-out cubic sprint curve
-        const ease = 1 - Math.pow(1 - progress, 2.5);
+        if (sprint.stage === 'running') {
+          // Dynamic HUD readout showing runner approaching
+          const remainingMeters = Math.max(1, Math.round((1 - progress) * 14));
+          setDeliveryToast({
+            text: `🏃 ${sprint.npcName} is running to you!`,
+            sub: `Delivering Shiv's ${sprint.section.toUpperCase()} letter...`,
+            distance: `${remainingMeters}m away`,
+          });
 
-        const currentTargetX = playerObj.position.x + sprint.targetOffset.x;
-        const currentTargetY = playerObj.position.y + sprint.targetOffset.y;
-        const currentTargetZ = playerObj.position.z + sprint.targetOffset.z;
-
-        const curX = sprint.startPos.x + (currentTargetX - sprint.startPos.x) * ease;
-        const curY = sprint.startPos.y + (currentTargetY - sprint.startPos.y) * ease;
-        const curZ = sprint.startPos.z + (currentTargetZ - sprint.startPos.z) * ease;
-
-        // Add running stride bobbing
-        const bob = Math.sin(progress * Math.PI * 14) * 0.12;
-
-        sprint.npcObj.position.set(curX, curY + bob, curZ);
-
-        // Sprint completed!
-        if (progress >= 1) {
-          const config = NPC_CONFIGS.find((c) => c.section === sprint.section);
-          triggerHandOff(sprint.section, config?.name || 'Messenger');
-
-          // Return NPC smoothly after 5 seconds
-          const origPos = sprint.originalPos;
-          const mesh = sprint.npcObj;
-          setTimeout(() => {
-            if (origPos && mesh) {
-              mesh.position.set(origPos.x, origPos.y, origPos.z);
+          // Smooth spherical ground progression
+          const basePos = vNorm(
+            vAdd(
+              vMul(sprint.spawnPoint, 1 - progress),
+              vMul(sprint.targetPoint, progress)
+            )
+          );
+          let surfacePos = vMul(basePos, sprint.planetRadius);
+          if (collider && raycaster) {
+            try {
+              const Vec3 = playerObj.position.constructor;
+              const origin = new Vec3(basePos.x * (sprint.planetRadius + 15), basePos.y * (sprint.planetRadius + 15), basePos.z * (sprint.planetRadius + 15));
+              const dir = new Vec3(-basePos.x, -basePos.y, -basePos.z);
+              raycaster.set(origin, dir);
+              const hits = raycaster.intersectObject(collider, false);
+              if (hits && hits[0]) {
+                surfacePos = { x: hits[0].point.x, y: hits[0].point.y, z: hits[0].point.z };
+              }
+            } catch {
+              // fallback to spherical surface
             }
-          }, 5000);
+          }
 
-          activeSprintRef.current = null;
+          // Running stride bobbing (running gait)
+          const strideBob = Math.sin(progress * Math.PI * 24) * 0.16;
+          const currentUp = basePos;
+          const finalPos = vAdd(surfacePos, vMul(currentUp, strideBob));
+
+          sprint.npcMesh.position.set(finalPos.x, finalPos.y, finalPos.z);
+          if (sprint.npcMesh._targetPosition) {
+            sprint.npcMesh._targetPosition.set(finalPos.x, finalPos.y, finalPos.z);
+          }
+          if (sprint.npcMesh.up) {
+            sprint.npcMesh.up.set(currentUp.x, currentUp.y, currentUp.z);
+          }
+          if (typeof sprint.npcMesh.lookAt === 'function') {
+            sprint.npcMesh.lookAt(playerObj.position.x, playerObj.position.y, playerObj.position.z);
+          }
+          if (typeof sprint.npcMesh.updateMatrix === 'function') {
+            sprint.npcMesh.updateMatrix();
+          }
+
+          // Runner has arrived right in front of the player!
+          if (progress >= 1) {
+            sprint.stage = 'handing';
+            sprint.npcMesh._sprintActive = false;
+
+            // Pin at delivery target position right in front of player
+            sprint.npcMesh.position.set(sprint.targetPoint.x, sprint.targetPoint.y, sprint.targetPoint.z);
+            if (sprint.npcMesh._targetPosition) {
+              sprint.npcMesh._targetPosition.set(sprint.targetPoint.x, sprint.targetPoint.y, sprint.targetPoint.z);
+            }
+            if (typeof sprint.npcMesh.lookAt === 'function') {
+              sprint.npcMesh.lookAt(playerObj.position.x, playerObj.position.y, playerObj.position.z);
+            }
+
+            setDeliveryToast({
+              text: `✉ Letter Handed to You!`,
+              sub: `${sprint.npcName}: "Special delivery! Here is Shiv's ${sprint.section.toUpperCase()} letter!"`,
+              distance: 'Delivered',
+            });
+
+            // Hand-off pause: let the user see the character standing in front of them with the letter!
+            setTimeout(() => {
+              (window as any)._sprintActive = false;
+              onOpenLetter(sprint.section);
+              setDeliveryToast(null);
+
+              // Reset NPC to their scenic world station after 8 seconds
+              setTimeout(() => {
+                if (sprint.originalPos && sprint.npcMesh) {
+                  sprint.npcMesh.position.set(
+                    sprint.originalPos.x,
+                    sprint.originalPos.y,
+                    sprint.originalPos.z
+                  );
+                  if (sprint.npcMesh._targetPosition) {
+                    sprint.npcMesh._targetPosition.set(
+                      sprint.originalPos.x,
+                      sprint.originalPos.y,
+                      sprint.originalPos.z
+                    );
+                  }
+                  sprint.npcMesh._visibilityThreshold = 35;
+                }
+                activeSprintRef.current = null;
+              }, 8000);
+            }, 750);
+          }
+        } else if (sprint.stage === 'handing') {
+          // Keep NPC stationary right in front of player facing them during hand-off
+          sprint.npcMesh.position.set(sprint.targetPoint.x, sprint.targetPoint.y, sprint.targetPoint.z);
+          if (sprint.npcMesh._targetPosition) {
+            sprint.npcMesh._targetPosition.set(sprint.targetPoint.x, sprint.targetPoint.y, sprint.targetPoint.z);
+          }
+          if (typeof sprint.npcMesh.lookAt === 'function') {
+            sprint.npcMesh.lookAt(playerObj.position.x, playerObj.position.y, playerObj.position.z);
+          }
         }
       }
 
-      // Project each NPC's head position to 2D screen coordinates
-      if (camera && typeof camera.project === 'function') {
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-        const playerPos = playerObj?.position;
+      // Project NPC Head Badges to 2D Screen Coordinates
+      if (camera && playerObj) {
+        try {
+          const Vec3 = playerObj.position.constructor;
+          const width = window.innerWidth;
+          const height = window.innerHeight;
+          const playerPos = playerObj.position;
 
-        const updatedBadges: ScreenBadge[] = [];
+          const updatedBadges: ScreenBadge[] = [];
 
-        NPC_CONFIGS.forEach((cfg) => {
-          let worldX = cfg.fallbackPos[0];
-          let worldY = cfg.fallbackPos[1];
-          let worldZ = cfg.fallbackPos[2];
+          NPC_CONFIGS.forEach((cfg) => {
+            let worldX = cfg.fallbackPos[0];
+            let worldY = cfg.fallbackPos[1];
+            let worldZ = cfg.fallbackPos[2];
 
-          // Try getting live position from scene NPC mesh
-          if (scene && scene.npcs) {
-            const entry = scene.npcs.find((n: any) => n.options?.id === cfg.id);
-            if (entry && entry.mesh) {
-              worldX = entry.mesh.position.x;
-              worldY = entry.mesh.position.y;
-              worldZ = entry.mesh.position.z;
+            if (scene && scene.npcs) {
+              const entry = scene.npcs.find((n: any) => n.options?.id === cfg.id);
+              if (entry && entry.mesh) {
+                worldX = entry.mesh.position.x;
+                worldY = entry.mesh.position.y;
+                worldZ = entry.mesh.position.z;
+              }
             }
-          }
 
-          // Offset above character's head
-          const headY = worldY + 1.85;
+            const headY = worldY + 1.85;
 
-          // Distance to player
-          let dist = 100;
-          if (playerPos) {
-            dist = Math.hypot(worldX - playerPos.x, worldY - playerPos.y, worldZ - playerPos.z);
-          }
+            let dist = 100;
+            if (playerPos) {
+              dist = Math.hypot(worldX - playerPos.x, worldY - playerPos.y, worldZ - playerPos.z);
+            }
 
-          // Vector to project
-          const v = { x: worldX, y: headY, z: worldZ };
-          camera.project(v);
+            const v = new Vec3(worldX, headY, worldZ);
+            v.project(camera);
 
-          // Check if inside camera view frustum
-          const visible = v.z < 1.0 && v.z > -1.0 && dist < 42;
-          const screenX = (v.x * 0.5 + 0.5) * width;
-          const screenY = (-(v.y * 0.5) + 0.5) * height;
+            const isSprinting = activeSprintRef.current?.npcId === cfg.id;
+            const visible = v.z < 1.0 && v.z > -1.0 && (dist < 45 || isSprinting);
+            const screenX = (v.x * 0.5 + 0.5) * width;
+            const screenY = (-(v.y * 0.5) + 0.5) * height;
 
-          updatedBadges.push({
-            id: cfg.id,
-            section: cfg.section,
-            label: cfg.label,
-            name: cfg.name,
-            icon: cfg.icon,
-            color: cfg.color,
-            screenX,
-            screenY,
-            distance: dist,
-            isClose: dist < 3.2,
-            visible,
+            updatedBadges.push({
+              id: cfg.id,
+              section: cfg.section,
+              label: cfg.label,
+              name: cfg.name,
+              icon: cfg.icon,
+              color: cfg.color,
+              screenX,
+              screenY,
+              distance: dist,
+              isClose: dist < 3.2,
+              visible,
+            });
           });
-        });
 
-        setBadges(updatedBadges);
+          setBadges(updatedBadges);
+        } catch {
+          // Ignore projection frame errors
+        }
       }
 
       animId = requestAnimationFrame(updateLoop);
@@ -363,30 +502,34 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
         {badges.map((b) => {
           if (!b.visible) return null;
 
-          // Clamp screen coordinates so badges don't fly wildly off-screen
           const x = Math.max(40, Math.min(window.innerWidth - 40, b.screenX));
           const y = Math.max(30, Math.min(window.innerHeight - 30, b.screenY));
-
-          // Scale smoothly based on distance
           const scale = Math.max(0.72, Math.min(1.05, 1.2 - b.distance * 0.02));
+
+          const isRunner = activeSprintRef.current?.npcId === b.id;
 
           return (
             <div
               key={b.id}
-              onClick={() => triggerHandOff(b.section, b.name)}
+              onClick={() => {
+                if (!activeSprintRef.current) {
+                  triggerHandOff(b.section, b.name);
+                }
+              }}
               className="npc-overhead-badge"
               style={{
                 position: 'absolute',
                 left: `${x}px`,
                 top: `${y}px`,
-                transform: `translate(-50%, -100%) scale(${scale})`,
+                transform: `translate(-50%, -100%) scale(${isRunner ? 1.2 : scale})`,
                 pointerEvents: 'auto',
                 cursor: 'pointer',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 userSelect: 'none',
-                transition: 'transform 0.1s ease-out',
+                transition: 'transform 0.08s ease-out',
+                zIndex: isRunner ? 9995 : 9990,
               }}
             >
               {/* Comic Banner Tag */}
@@ -395,23 +538,23 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '6px',
-                  backgroundColor: b.isClose ? '#f4c430' : '#fffef9',
+                  backgroundColor: isRunner ? '#f4c430' : b.isClose ? '#f4c430' : '#fffef9',
                   color: '#1e252b',
                   border: '2.5px solid #1e252b',
                   borderRadius: '12px',
-                  padding: b.isClose ? '5px 12px' : '4px 10px',
+                  padding: b.isClose || isRunner ? '5px 12px' : '4px 10px',
                   boxShadow: '3px 3px 0px #1e252b',
                   fontFamily: "'Fredoka', sans-serif",
-                  fontSize: b.isClose ? '13px' : '12px',
+                  fontSize: b.isClose || isRunner ? '13px' : '12px',
                   fontWeight: 700,
                   letterSpacing: '0.04em',
                   whiteSpace: 'nowrap',
-                  animation: b.isClose ? 'badgePulse 1.2s infinite' : 'none',
+                  animation: b.isClose || isRunner ? 'badgePulse 1.2s infinite' : 'none',
                 }}
               >
-                <span style={{ fontSize: '14px' }}>{b.icon}</span>
-                <span>{b.label}</span>
-                {b.isClose && (
+                <span style={{ fontSize: '15px' }}>{isRunner ? '🏃' : b.icon}</span>
+                <span>{isRunner ? `DELIVERING ${b.label}` : b.label}</span>
+                {b.isClose && !isRunner && (
                   <span
                     style={{
                       backgroundColor: '#1e252b',
@@ -431,13 +574,13 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
               {/* Sub-label showing NPC identity */}
               <span
                 style={{
-                  fontSize: '10.5px',
+                  fontSize: '11px',
                   fontWeight: 700,
                   color: '#ffffff',
                   textShadow: '0 1px 3px rgba(0,0,0,0.8), 0 0 2px #000',
                   marginTop: '2px',
-                  backgroundColor: 'rgba(30, 37, 43, 0.65)',
-                  padding: '1px 6px',
+                  backgroundColor: isRunner ? 'rgba(217, 83, 79, 0.9)' : 'rgba(30, 37, 43, 0.65)',
+                  padding: '2px 8px',
                   borderRadius: '6px',
                   border: '1px solid rgba(255,255,255,0.3)',
                 }}
@@ -445,7 +588,7 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
                 {b.name}
               </span>
 
-              {/* Downward comic pointer arrow */}
+              {/* Pointer Arrow */}
               <div
                 style={{
                   width: 0,
@@ -461,37 +604,55 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
         })}
       </div>
 
-      {/* Delivery Toast Notification */}
+      {/* Cinematic Delivery Toast Notification */}
       {deliveryToast && (
         <div
           role="status"
           aria-live="polite"
           style={{
             position: 'fixed',
-            bottom: '24px',
+            bottom: '28px',
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 10006,
             backgroundColor: '#fffef9',
             border: '3px solid #1e252b',
             borderRadius: '16px',
-            padding: '12px 20px',
-            boxShadow: '5px 5px 0px #1e252b',
+            padding: '12px 24px',
+            boxShadow: '6px 6px 0px #1e252b',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: '2px',
+            gap: '3px',
             fontFamily: "'Fredoka', sans-serif",
             animation: 'toastPopIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
             pointerEvents: 'auto',
             textAlign: 'center',
-            maxWidth: '90vw',
+            maxWidth: '92vw',
           }}
         >
-          <strong style={{ fontSize: '15px', color: '#1e252b' }}>
-            {deliveryToast.text}
-          </strong>
-          <span style={{ fontSize: '12.5px', color: '#55636d', fontWeight: 600 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <strong style={{ fontSize: '16px', color: '#1e252b' }}>
+              {deliveryToast.text}
+            </strong>
+            {deliveryToast.distance && (
+              <span
+                style={{
+                  backgroundColor: '#f4c430',
+                  color: '#1e252b',
+                  border: '1.5px solid #1e252b',
+                  borderRadius: '8px',
+                  padding: '2px 8px',
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  boxShadow: '1.5px 1.5px 0px #1e252b',
+                }}
+              >
+                {deliveryToast.distance}
+              </span>
+            )}
+          </div>
+          <span style={{ fontSize: '13px', color: '#55636d', fontWeight: 600 }}>
             {deliveryToast.sub}
           </span>
         </div>
