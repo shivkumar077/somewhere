@@ -3,6 +3,16 @@ import { X, ExternalLink, Github, ChevronLeft, ChevronRight, Download, Mail, Pho
 
 export type PortfolioSection = 'about' | 'education' | 'experience' | 'projects' | 'skills' | 'contact' | 'cv';
 
+const SECTION_COURIER: Record<PortfolioSection, { name: string; icon: string }> = {
+  about: { name: 'Mountain Ranger', icon: '👤' },
+  education: { name: 'Doctor Frebi', icon: '🎓' },
+  experience: { name: 'Executive Lead', icon: '💼' },
+  projects: { name: 'Hacker Girl', icon: '📂' },
+  skills: { name: 'Systems Engineer', icon: '⚡' },
+  contact: { name: 'Dave the Musician', icon: '📬' },
+  cv: { name: 'Soto the Fox', icon: '🦊' },
+};
+
 interface LetterModalProps {
   isOpen: boolean;
   section: PortfolioSection;
@@ -14,22 +24,11 @@ export const LetterModal: React.FC<LetterModalProps> = ({
   isOpen,
   section,
   onClose,
-  onSelectSection,
 }) => {
   const [projectPage, setProjectPage] = useState(0);
   const [cvViewMode, setCvViewMode] = useState<'doc' | 'pdf'>('doc');
 
   if (!isOpen) return null;
-
-  const ALL_SECTIONS: { id: PortfolioSection; label: string; icon: string }[] = [
-    { id: 'about', label: 'ABOUT', icon: '👤' },
-    { id: 'education', label: 'EDUCATION', icon: '🎓' },
-    { id: 'experience', label: 'EXPERIENCE', icon: '💼' },
-    { id: 'projects', label: 'PROJECTS', icon: '📂' },
-    { id: 'skills', label: 'SKILLS', icon: '⚡' },
-    { id: 'contact', label: 'CONTACT', icon: '📬' },
-    { id: 'cv', label: 'CV', icon: '📄' },
-  ];
 
   const PROJECTS = [
     {
@@ -159,8 +158,8 @@ export const LetterModal: React.FC<LetterModalProps> = ({
             borderBottom: '2.5px solid #1e252b',
           }}
         >
-          {/* Section Stamp Pill & Quick Tabs */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          {/* Section Stamp Pill & Courier Attribution */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
             <span
               style={{
                 backgroundColor: '#f4c430',
@@ -187,43 +186,8 @@ export const LetterModal: React.FC<LetterModalProps> = ({
                 fontWeight: 600,
               }}
             >
-              From: Shiv Kumar
+              From: Shiv Kumar · Delivered by {SECTION_COURIER[section]?.name || 'Courier'} {SECTION_COURIER[section]?.icon}
             </span>
-
-            {/* Quick Switch Pills */}
-            {onSelectSection && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginLeft: '6px', flexWrap: 'wrap' }}>
-                {ALL_SECTIONS.map((s) => {
-                  const isActive = section === s.id;
-                  return (
-                    <button
-                      key={s.id}
-                      onClick={() => onSelectSection(s.id)}
-                      title={`View ${s.label} letter`}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '3px',
-                        backgroundColor: isActive ? '#f4c430' : '#ffffff',
-                        color: '#1e252b',
-                        border: '1.5px solid #1e252b',
-                        borderRadius: '6px',
-                        padding: '2px 7px',
-                        fontSize: '10.5px',
-                        fontWeight: 800,
-                        cursor: 'pointer',
-                        boxShadow: isActive ? 'none' : '1px 1px 0px #1e252b',
-                        transform: isActive ? 'translate(1px, 1px)' : 'none',
-                        transition: 'all 0.1s ease',
-                      }}
-                    >
-                      <span>{s.icon}</span>
-                      <span style={{ color: '#1e252b' }}>{s.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
           </div>
 
           {/* Close Button */}
