@@ -1,242 +1,214 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { CANONICAL_WORLD } from './world/worldData';
-import {
-  ATMOSPHERE_PRESETS,
-  AtmosphereMode,
-  getAtmosphereFromLocalTime,
-} from './config/atmosphereConfig';
-import { SceneCanvas, ViewMode } from './components/canvas/SceneCanvas';
-import { WelcomeOverlay } from './components/ui/WelcomeOverlay';
-import { TownHUD } from './components/ui/TownHUD';
 import { DestinationModal } from './components/ui/DestinationModal';
-import { NPCDialogueModal } from './components/ui/NPCDialogueModal';
-import { AudioControl } from './components/ui/AudioControl';
-import { AtmosphereControls } from './components/ui/AtmosphereControls';
-import { FallbackView } from './components/ui/FallbackView';
-import { BuildingItem, NPCEntity, DestinationType } from './world/types';
-import { usePlayerMovement } from './hooks/usePlayerMovement';
-import { audioManager } from './utils/audioManager';
+import { BuildingItem, DestinationType } from './world/types';
+import {
+  User,
+  GraduationCap,
+  Briefcase,
+  FolderGit2,
+  Cpu,
+  Mail,
+  ExternalLink,
+} from 'lucide-react';
 
-function checkWebGLSupport(): boolean {
-  try {
-    const canvas = document.createElement('canvas');
-    return !!(
-      window.WebGLRenderingContext &&
-      (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
-    );
-  } catch {
-    return false;
-  }
-}
+const DESTINATIONS: { role: DestinationType; label: string; icon: any; buildingId: string }[] = [
+  { role: 'about', label: 'About', icon: User, buildingId: 'building-little-house' },
+  { role: 'education', label: 'Education', icon: GraduationCap, buildingId: 'building-university' },
+  { role: 'experience', label: 'Experience', icon: Briefcase, buildingId: 'building-workshop' },
+  { role: 'projects', label: 'Projects', icon: FolderGit2, buildingId: 'building-invention-house' },
+  { role: 'skills', label: 'Skills', icon: Cpu, buildingId: 'building-library' },
+  { role: 'contact', label: 'Contact', icon: Mail, buildingId: 'building-post-office' },
+];
 
 export const App: React.FC = () => {
-  const [hasWebGL, setHasWebGL] = useState<boolean | null>(null);
-
-  // Time & Atmosphere state
-  const [isAutoTime, setIsAutoTime] = useState(true);
-  const [atmosphereMode, setAtmosphereMode] = useState<AtmosphereMode>(() =>
-    getAtmosphereFromLocalTime()
-  );
-  const [currentDate, setCurrentDate] = useState(new Date());
-
-  // Interactive Enter / Navigation state
-  const [isEntering, setIsEntering] = useState(false);
-  const [isEntered, setIsEntered] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>('miniature');
-
-  // Interactive inspection and modal states
-  const [hoveredBuilding, setHoveredBuilding] = useState<BuildingItem | null>(null);
   const [selectedBuilding, setSelectedBuilding] = useState<BuildingItem | null>(null);
-  const [selectedNPC, setSelectedNPC] = useState<NPCEntity | null>(null);
 
-  // Walkable Character Movement Engine
-  const {
-    position: playerPosition,
-    rotationY: playerRotation,
-    isWalking,
-    targetPoint,
-    nearbyDestination,
-    nearbyNPC,
-    setMoveTarget,
-    navigateToDestination,
-  } = usePlayerMovement(CANONICAL_WORLD, isEntered);
-
-  // Check WebGL on mount
-  useEffect(() => {
-    setHasWebGL(checkWebGLSupport());
-  }, []);
-
-  // Update local time and sync atmosphere if isAutoTime is active
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const now = new Date();
-      setCurrentDate(now);
-      if (isAutoTime) {
-        setAtmosphereMode(getAtmosphereFromLocalTime(now));
-      }
-    }, 30000);
-
-    return () => clearInterval(timer);
-  }, [isAutoTime]);
-
-  // Keyboard shortcut [E] for interacting with nearby building or NPC
-  useEffect(() => {
-    if (!isEntered) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'KeyE') {
-        if (selectedBuilding || selectedNPC) return;
-        if (nearbyDestination && nearbyDestination.destinationRole) {
-          setSelectedBuilding(nearbyDestination);
-        } else if (nearbyNPC) {
-          setSelectedNPC(nearbyNPC);
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isEntered, nearbyDestination, nearbyNPC, selectedBuilding, selectedNPC]);
-
-  const handleSetMode = useCallback((mode: AtmosphereMode, auto: boolean) => {
-    setIsAutoTime(auto);
-    if (auto) {
-      setAtmosphereMode(getAtmosphereFromLocalTime());
-    } else {
-      setAtmosphereMode(mode);
+  const buildingsByRole = useMemo(() => {
+    const map = new Map<string, BuildingItem>();
+    for (const b of CANONICAL_WORLD.buildings) {
+      if (b.destinationRole) map.set(b.destinationRole, b);
+      map.set(b.id, b);
     }
+    return map;
   }, []);
 
-  // Continuous Camera Fly-In Zoom into the exact same physical world
-  const handleEnter = useCallback(() => {
-    if (isEntering || isEntered) return;
-    // Seamless audio play: does not restart or create duplicate nodes if already playing
-    audioManager.ensurePlaying().catch(() => {});
-    setIsEntering(true);
-
-    // Continuous camera glide over 2.1s then reveal TownHUD
-    setTimeout(() => {
-      setIsEntered(true);
-      setIsEntering(false);
-      setViewMode('walkable');
-    }, 2100);
-  }, [isEntering, isEntered]);
-
-  // Smooth return to orbit view
-  const handleReturnToOrbit = useCallback(() => {
-    setIsEntered(false);
-    setIsEntering(false);
-    setViewMode('miniature');
-    setSelectedBuilding(null);
-    setSelectedNPC(null);
-  }, []);
-
-  const handleNavigateToDestination = useCallback(
-    (destRole: DestinationType) => {
-      setSelectedNPC(null);
-      navigateToDestination(destRole);
+  const handleOpenRole = useCallback(
+    (role: DestinationType) => {
+      const b = buildingsByRole.get(role);
+      if (b) setSelectedBuilding(b);
     },
-    [navigateToDestination]
+    [buildingsByRole]
   );
-
-  const handleGroundClick = useCallback(
-    (point: [number, number, number]) => {
-      setMoveTarget(point[0], point[2]);
-    },
-    [setMoveTarget]
-  );
-
-  const formattedTime = useMemo(() => {
-    return currentDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }, [currentDate]);
-
-  const currentAtmosphere = ATMOSPHERE_PRESETS[atmosphereMode];
-
-  if (hasWebGL === false) {
-    return <FallbackView reason="WebGL context could not be created on this browser session." />;
-  }
 
   return (
     <div
       style={{
-        position: 'relative',
-        width: '100vw',
-        height: '100vh',
-        overflow: 'hidden',
+        position: 'fixed',
+        inset: 0,
+        pointerEvents: 'none',
+        zIndex: 20,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        padding: 'max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left))',
+        boxSizing: 'border-box',
+        fontFamily: "'Chakra Petch', 'Russo One', sans-serif",
       }}
     >
-      {/* 1. Persistent Audio Control (Top-Left) */}
-      <div
+      {/* Top Floating Portfolio Navigation Bar */}
+      <header
         style={{
-          position: 'absolute',
-          top: 'max(14px, var(--sat))',
-          left: 'max(14px, var(--sal))',
-          zIndex: 35,
-          pointerEvents: 'auto',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          width: '100%',
+          flexWrap: 'wrap',
+          gap: '10px',
         }}
       >
-        <AudioControl />
-      </div>
+        {/* Brand Block Badge */}
+        <div
+          style={{
+            pointerEvents: 'auto',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            backgroundColor: '#f4c430',
+            color: '#1e252b',
+            border: '2.5px solid #1e252b',
+            borderRadius: '10px',
+            boxShadow: '3px 3px 0px #1e252b',
+            padding: '6px 14px',
+            fontWeight: 900,
+            fontSize: '14px',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            userSelect: 'none',
+          }}
+        >
+          <span>SHIV KUMAR</span>
+          <span
+            style={{
+              backgroundColor: '#1e252b',
+              color: '#f4c430',
+              padding: '2px 6px',
+              borderRadius: '4px',
+              fontSize: '11px',
+            }}
+          >
+            PORTFOLIO
+          </span>
+        </div>
 
-      {/* 2. Top-Right Atmosphere Mode Switcher */}
-      <AtmosphereControls
-        currentMode={atmosphereMode}
-        isAuto={isAutoTime}
-        localTimeFormatted={formattedTime}
-        onSetMode={handleSetMode}
-      />
+        {/* Portfolio Destination Pills */}
+        <nav
+          aria-label="Portfolio Destinations"
+          style={{
+            pointerEvents: 'auto',
+            display: 'inline-flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '6px',
+            backgroundColor: 'rgba(255, 253, 250, 0.92)',
+            backdropFilter: 'blur(8px)',
+            border: '2px solid #1e252b',
+            borderRadius: '12px',
+            boxShadow: '3px 3px 0px #1e252b',
+            padding: '4px 6px',
+          }}
+        >
+          {DESTINATIONS.map(({ role, label, icon: Icon }) => (
+            <button
+              key={role}
+              onClick={() => handleOpenRole(role)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                border: '1.5px solid transparent',
+                backgroundColor: 'transparent',
+                color: '#1e252b',
+                fontSize: '12px',
+                fontWeight: 700,
+                letterSpacing: '0.05em',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#f4c430';
+                e.currentTarget.style.borderColor = '#1e252b';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.borderColor = 'transparent';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              <Icon size={14} strokeWidth={2.5} />
+              <span>{label}</span>
+            </button>
+          ))}
+        </nav>
+      </header>
 
-      {/* 3. 3D Scene Canvas — Continuous Cel-Shaded Messenger-Style World */}
-      <SceneCanvas
-        world={CANONICAL_WORLD}
-        atmosphere={currentAtmosphere}
-        isEntering={isEntering}
-        isEntered={isEntered}
-        viewMode={viewMode}
-        playerPosition={playerPosition}
-        playerRotation={playerRotation}
-        isWalking={isWalking}
-        targetPoint={targetPoint}
-        onGroundClick={handleGroundClick}
-        onHoverBuilding={setHoveredBuilding}
-        onSelectBuilding={setSelectedBuilding}
-        onSelectNPC={setSelectedNPC}
-      />
+      {/* Bottom Info Hint */}
+      <footer
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-end',
+          width: '100%',
+        }}
+      >
+        <div
+          style={{
+            pointerEvents: 'auto',
+            backgroundColor: 'rgba(30, 37, 43, 0.85)',
+            color: '#f8f8f8',
+            padding: '4px 10px',
+            borderRadius: '6px',
+            fontSize: '11px',
+            fontWeight: 600,
+            letterSpacing: '0.04em',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+          }}
+        >
+          <span>DRAG TO ROTATE WORLD • CLICK ANY DESTINATION ABOVE TO EXPLORE</span>
+        </div>
 
-      {/* 4. Landing Welcome Message & ENTER Overlay (Hidden when entered) */}
-      <WelcomeOverlay
-        isEntered={isEntered}
-        isTransitioning={isEntering}
-        onEnter={handleEnter}
-        hoveredBuilding={hoveredBuilding}
-        selectedBuilding={selectedBuilding}
-        onClearSelectedBuilding={() => setSelectedBuilding(null)}
-      />
+        <a
+          href="https://github.com/shivkumar077/somewhere"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            pointerEvents: 'auto',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '5px',
+            backgroundColor: '#fffdfa',
+            color: '#1e252b',
+            border: '2px solid #1e252b',
+            borderRadius: '8px',
+            boxShadow: '2px 2px 0px #1e252b',
+            padding: '5px 10px',
+            fontSize: '11px',
+            fontWeight: 700,
+            textDecoration: 'none',
+          }}
+        >
+          <span>GITHUB</span>
+          <ExternalLink size={12} />
+        </a>
+      </footer>
 
-      {/* 5. Living Town HUD (Compass, Destinations, Prompts) */}
-      {isEntered && (
-        <TownHUD
-          nearbyDestination={nearbyDestination}
-          nearbyNPC={nearbyNPC}
-          onOpenDestination={setSelectedBuilding}
-          onOpenNPC={setSelectedNPC}
-          onNavigateToDestination={handleNavigateToDestination}
-          onReturnToOrbit={handleReturnToOrbit}
-          playerPosition={playerPosition}
-        />
-      )}
-
-      {/* 6. Destination Detail Modal Drawer */}
+      {/* Destination Modal Drawer */}
       <DestinationModal
         building={selectedBuilding}
         onClose={() => setSelectedBuilding(null)}
-      />
-
-      {/* 7. NPC Story Dialogue Modal */}
-      <NPCDialogueModal
-        npc={selectedNPC}
-        onClose={() => setSelectedNPC(null)}
-        onNavigateToDestination={handleNavigateToDestination}
       />
     </div>
   );

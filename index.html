@@ -2,14 +2,49 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>SOMEWHERE — A Whimsical 3D World</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon32-BC0QIL61.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no, minimal-ui, viewport-fit=cover" />
+    <title>SOMEWHERE — Shiv Kumar | Portfolio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@700;900&family=Fredoka:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Russo+One&display=swap" rel="stylesheet">
+    <script type="module" crossorigin="" src="/assets/webgl-CS4l6lxD.js"></script>
+    <link rel="modulepreload" crossorigin="" href="/assets/App3D-DwM1eiaC.js" />
+    <link rel="stylesheet" crossorigin="" href="/assets/style-BgpnrCnL.css" />
+    <style>
+      html, html body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background-color: #5bb8b2;
+        touch-action: none;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+      }
+      div#app {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        z-index: 1;
+      }
+      div#root {
+        position: absolute;
+        inset: 0;
+        z-index: 20;
+        pointer-events: none;
+      }
+    </style>
   </head>
   <body>
+    <div id="app"></div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
