@@ -83,13 +83,13 @@ const NPC_CONFIGS: NPCConfig[] = [
     color: '#de794e',
   },
   {
-    id: 'diver',
+    id: 'fox',
     section: 'cv',
     label: 'CV DOCUMENT',
-    name: 'Captain Steve',
-    icon: '📄',
-    fallbackPos: [15.8793, 16.9006, 11.2543],
-    color: '#4db6ac',
+    name: 'Suto the Cat',
+    icon: '🐱',
+    fallbackPos: [-8.36976, -20.368, 10.0339],
+    color: '#ff85a2',
   },
 ];
 
@@ -151,9 +151,12 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
 
   // Direct hand-off when interacting close up
   const triggerHandOff = (section: PortfolioSection, npcName: string) => {
+    const isCat = section === 'cv';
     setDeliveryToast({
-      text: `✉ Letter Delivered by ${npcName}!`,
-      sub: `Here is Shiv's ${section.toUpperCase()} portfolio letter!`,
+      text: isCat ? `🐱 CV Delivered by Suto!` : `✉ Letter Delivered by ${npcName}!`,
+      sub: isCat
+        ? `Suto: "Meow! Here is Shiv's CV document!"`
+        : `Here is Shiv's ${section.toUpperCase()} portfolio letter!`,
     });
     setTimeout(() => setDeliveryToast(null), 3000);
     onOpenLetter(section);
@@ -313,9 +316,14 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
         if (sprint.stage === 'running') {
           // Dynamic HUD readout showing runner approaching
           const remainingMeters = Math.max(1, Math.round((1 - progress) * 14));
+          const isCat = sprint.npcId === 'fox' || sprint.section === 'cv';
           setDeliveryToast({
-            text: `🏃 ${sprint.npcName} is running to you!`,
-            sub: `Delivering Shiv's ${sprint.section.toUpperCase()} letter...`,
+            text: isCat
+              ? `🐾 Suto is coming to deliver your CV!`
+              : `🏃 ${sprint.npcName} is running to you!`,
+            sub: isCat
+              ? `Delivering Shiv's CV document...`
+              : `Delivering Shiv's ${sprint.section.toUpperCase()} letter...`,
             distance: `${remainingMeters}m away`,
           });
 
@@ -375,9 +383,12 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
               sprint.npcMesh.lookAt(playerObj.position.x, playerObj.position.y, playerObj.position.z);
             }
 
+            const isCat = sprint.npcId === 'fox' || sprint.section === 'cv';
             setDeliveryToast({
-              text: `✉ Letter Handed to You!`,
-              sub: `${sprint.npcName}: "Special delivery! Here is Shiv's ${sprint.section.toUpperCase()} letter!"`,
+              text: isCat ? `🐱 CV Delivered by Suto!` : `✉ Letter Handed to You!`,
+              sub: isCat
+                ? `Suto: "Meow! Here is Shiv's CV document! Ready to read!"`
+                : `${sprint.npcName}: "Special delivery! Here is Shiv's ${sprint.section.toUpperCase()} letter!"`,
               distance: 'Delivered',
             });
 
@@ -444,7 +455,7 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
               }
             }
 
-            const headY = worldY + 1.85;
+            const headY = cfg.id === 'fox' ? worldY + 1.15 : worldY + 1.85;
 
             let dist = 100;
             if (playerPos) {
@@ -552,8 +563,8 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
                   animation: b.isClose || isRunner ? 'badgePulse 1.2s infinite' : 'none',
                 }}
               >
-                <span style={{ fontSize: '15px' }}>{isRunner ? '🏃' : b.icon}</span>
-                <span>{isRunner ? `DELIVERING ${b.label}` : b.label}</span>
+                <span style={{ fontSize: '15px' }}>{isRunner ? (b.id === 'fox' ? '🐱' : '🏃') : b.icon}</span>
+                <span>{isRunner ? (b.id === 'fox' ? 'SUTO DELIVERING CV' : `DELIVERING ${b.label}`) : b.label}</span>
                 {b.isClose && !isRunner && (
                   <span
                     style={{
@@ -579,13 +590,13 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
                   color: '#ffffff',
                   textShadow: '0 1px 3px rgba(0,0,0,0.8), 0 0 2px #000',
                   marginTop: '2px',
-                  backgroundColor: isRunner ? 'rgba(217, 83, 79, 0.9)' : 'rgba(30, 37, 43, 0.65)',
+                  backgroundColor: b.id === 'fox' && isRunner ? 'rgba(235, 94, 140, 0.95)' : isRunner ? 'rgba(217, 83, 79, 0.9)' : 'rgba(30, 37, 43, 0.65)',
                   padding: '2px 8px',
                   borderRadius: '6px',
                   border: '1px solid rgba(255,255,255,0.3)',
                 }}
               >
-                {b.name}
+                {b.id === 'fox' ? '🐾 Suto the Cat' : b.name}
               </span>
 
               {/* Pointer Arrow */}
