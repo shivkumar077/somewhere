@@ -1,4 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { PortfolioSection } from './LetterModal';
 
 interface Vec3 {
@@ -83,15 +85,22 @@ const NPC_CONFIGS: NPCConfig[] = [
     color: '#de794e',
   },
   {
-    id: 'fox',
+    id: 'suto',
     section: 'cv',
     label: 'CV DOCUMENT',
     name: 'Suto the Cat',
     icon: '🐱',
-    fallbackPos: [-8.36976, -20.368, 10.0339],
+    fallbackPos: [15.8793, 16.9006, 11.2543],
     color: '#ff85a2',
   },
 ];
+
+interface LoadedCat {
+  wrapper: THREE.Group;
+  model: THREE.Object3D;
+  mixer: THREE.AnimationMixer;
+  action: THREE.AnimationAction;
+}
 
 interface ScreenBadge {
   id: string;
@@ -134,6 +143,52 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
   } | null>(null);
 
   const activeSprintRef = useRef<ActiveSprint | null>(null);
+  const catRef = useRef<LoadedCat | null>(null);
+
+  // Preload stylized toon cat model (Suto)
+  useEffect(() => {
+    const loader = new GLTFLoader();
+    loader.load(
+      '/assets/toon_cat_free.glb',
+      (gltf) => {
+        const catModel = gltf.scene;
+        // Scale to cute cat proportions (~0.55m tall)
+        catModel.scale.set(0.16, 0.16, 0.16);
+        // Face forward along Z
+        catModel.rotation.y = Math.PI;
+
+        // Apply hand-drawn cel-shaded art style matching the website
+        catModel.traverse((child: any) => {
+          if (child.isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+            const oldMap = child.material?.map;
+            child.material = new THREE.MeshToonMaterial({
+              map: oldMap || null,
+              color: 0xfff3e6, // cute warm cream/calico coat
+            });
+          }
+        });
+
+        const wrapper = new THREE.Group();
+        wrapper.name = 'suto_cat_courier';
+        wrapper.add(catModel);
+        wrapper.visible = false;
+
+        const mixer = new THREE.AnimationMixer(catModel);
+        let action: any = null;
+        if (gltf.animations && gltf.animations.length > 0) {
+          action = mixer.clipAction(gltf.animations[0]);
+          action.setEffectiveTimeScale(1.4); // bouncy, cute energetic cat trot/run!
+          action.play();
+        }
+
+        catRef.current = { wrapper, model: catModel, mixer, action };
+      },
+      undefined,
+      (err) => console.warn('Failed to load Suto cat model:', err)
+    );
+  }, []);
 
   // Press E to interact when close
   useEffect(() => {
@@ -199,7 +254,19 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
     }
 
     const npcEntry = scene.npcs?.find((n: any) => n.options?.id === config.id);
-    const npcMesh = npcEntry?.mesh;
+    let npcMesh = npcEntry?.mesh;
+
+    // Suto the cat uses our high-quality rigged and running toon cat model
+    if (section === 'cv' && catRef.current) {
+      npcMesh = catRef.current.wrapper;
+      catRef.current.wrapper.visible = true;
+      if (scene && catRef.current.wrapper.parent !== scene) {
+        scene.add(catRef.current.wrapper);
+      }
+      if (catRef.current.action) {
+        catRef.current.action.reset().play();
+      }
+    }
 
     const pPos: Vec3 = {
       x: playerObj.position.x,
@@ -314,6 +381,10 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
         const progress = Math.min(1, elapsed / sprint.duration);
 
         if (sprint.stage === 'running') {
+          // Advance Suto the cat's running animation mixer if sprinting
+          if (sprint.npcId === 'suto' && catRef.current?.mixer) {
+            catRef.current.mixer.update(0.024);
+          }
           // Dynamic HUD readout showing runner approaching
           const remainingMeters = Math.max(1, Math.round((1 - progress) * 14));
           const isCat = sprint.npcId === 'fox' || sprint.section === 'cv';
@@ -400,7 +471,9 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
 
               // Reset NPC to their scenic world station after 8 seconds
               setTimeout(() => {
-                if (sprint.originalPos && sprint.npcMesh) {
+                if (sprint.npcId === 'suto' && catRef.current) {
+                  catRef.current.wrapper.visible = false;
+                } else if (sprint.originalPos && sprint.npcMesh) {
                   sprint.npcMesh.position.set(
                     sprint.originalPos.x,
                     sprint.originalPos.y,
@@ -446,7 +519,15 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
             let worldY = cfg.fallbackPos[1];
             let worldZ = cfg.fallbackPos[2];
 
-            if (scene && scene.npcs) {
+            if (cfg.id === 'suto') {
+              if (catRef.current && catRef.current.wrapper.visible) {
+                worldX = catRef.current.wrapper.position.x;
+                worldY = catRef.current.wrapper.position.y;
+                worldZ = catRef.current.wrapper.position.z;
+              } else {
+                return; // Hide badge if Suto is not summoned
+              }
+            } else if (scene && scene.npcs) {
               const entry = scene.npcs.find((n: any) => n.options?.id === cfg.id);
               if (entry && entry.mesh) {
                 worldX = entry.mesh.position.x;
@@ -455,7 +536,7 @@ export const WorldNPCBadges: React.FC<WorldNPCBadgesProps> = ({ onOpenLetter }) 
               }
             }
 
-            const headY = cfg.id === 'fox' ? worldY + 1.15 : worldY + 1.85;
+            const headY = cfg.id === 'suto' ? worldY + 0.65 : cfg.id === 'fox' ? worldY + 1.15 : worldY + 1.85;
 
             let dist = 100;
             if (playerPos) {
