@@ -1,5 +1,79 @@
 import React, { useState } from 'react';
-import { X, ExternalLink, Github, ChevronLeft, ChevronRight, Download, Mail, Phone, MapPin, Award, BookOpen, Briefcase, Code, Sparkles } from 'lucide-react';
+import {
+  X,
+  ExternalLink,
+  Github,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Mail,
+  Phone,
+  MapPin,
+  Award,
+  BookOpen,
+  Briefcase,
+  Code,
+  Sparkles,
+  Instagram,
+} from 'lucide-react';
+
+export const SHIV_EMAIL = 'shivkumar6990655@gmail.com';
+
+/**
+ * Opens Gmail compose:
+ * - On PC: Opens web Gmail compose in a new tab with recipient pre-filled
+ * - On Mobile (phone/tablet): Opens the native Gmail app directly
+ */
+export function openShivGmail(e?: React.MouseEvent) {
+  if (e) {
+    e.preventDefault();
+  }
+
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent || '' : '';
+  const isMobile =
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) ||
+    (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 1 && /Macintosh/i.test(ua));
+
+  if (isMobile) {
+    const isAndroid = /Android/i.test(ua);
+    const isIOS =
+      /iPhone|iPad|iPod/i.test(ua) ||
+      (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 1 && /Macintosh/i.test(ua));
+
+    if (isAndroid) {
+      window.location.href = `intent://co?to=${encodeURIComponent(SHIV_EMAIL)}#Intent;scheme=googlegmail;package=com.google.android.gm;fallback=mailto:${encodeURIComponent(SHIV_EMAIL)};end`;
+    } else if (isIOS) {
+      const start = Date.now();
+      window.location.href = `googlegmail:///co?to=${encodeURIComponent(SHIV_EMAIL)}`;
+      setTimeout(() => {
+        if (Date.now() - start < 1500) {
+          window.location.href = `mailto:${SHIV_EMAIL}`;
+        }
+      }, 500);
+    } else {
+      window.location.href = `googlegmail:///co?to=${encodeURIComponent(SHIV_EMAIL)}`;
+      setTimeout(() => {
+        window.location.href = `mailto:${SHIV_EMAIL}`;
+      }, 500);
+    }
+  } else {
+    const webGmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(SHIV_EMAIL)}`;
+    window.open(webGmailUrl, '_blank', 'noopener,noreferrer');
+  }
+}
+
+// Crisp official X (formerly Twitter) icon
+const XIcon: React.FC<{ size?: number }> = ({ size = 15 }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 }}
+  >
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+  </svg>
+);
 
 export type PortfolioSection = 'about' | 'education' | 'experience' | 'projects' | 'skills' | 'contact' | 'cv';
 
@@ -395,7 +469,55 @@ export const LetterModal: React.FC<LetterModalProps> = ({
                   <ExternalLink size={15} /> LinkedIn ↗
                 </a>
                 <a
-                  href="mailto:shivkumar6990655@gmail.com"
+                  href="https://x.com/nightcore_077"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 14px',
+                    backgroundColor: '#ffffff',
+                    border: '2px solid #1e252b',
+                    borderRadius: '10px',
+                    boxShadow: '2px 2px 0px #1e252b',
+                    fontSize: '12.5px',
+                    fontWeight: 700,
+                    color: '#1e252b',
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <XIcon size={14} /> X ↗
+                </a>
+                <a
+                  href="https://www.instagram.com/nightcore_077/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 14px',
+                    backgroundColor: '#ffffff',
+                    border: '2px solid #1e252b',
+                    borderRadius: '10px',
+                    boxShadow: '2px 2px 0px #1e252b',
+                    fontSize: '12.5px',
+                    fontWeight: 700,
+                    color: '#1e252b',
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Instagram size={15} color="#e1306c" /> Instagram ↗
+                </a>
+                <a
+                  href="https://mail.google.com/mail/?view=cm&fs=1&to=shivkumar6990655@gmail.com"
+                  onClick={openShivGmail}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Open in Gmail (Web on PC / App on Phone)"
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -1163,8 +1285,12 @@ export const LetterModal: React.FC<LetterModalProps> = ({
                     <span style={{ fontSize: '11px', color: '#65737e', fontWeight: 700, textTransform: 'uppercase' }}>Direct Email</span>
                     <div>
                       <a
-                        href="mailto:shivkumar6990655@gmail.com"
-                        style={{ fontSize: '15px', fontWeight: 700, color: '#1e252b', textDecoration: 'none' }}
+                        href="https://mail.google.com/mail/?view=cm&fs=1&to=shivkumar6990655@gmail.com"
+                        onClick={openShivGmail}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Open in Gmail (Web on PC / App on Phone)"
+                        style={{ fontSize: '15px', fontWeight: 700, color: '#1e252b', textDecoration: 'underline', textDecorationColor: '#f4c430', textUnderlineOffset: '3px' }}
                       >
                         shivkumar6990655@gmail.com
                       </a>
@@ -1201,7 +1327,11 @@ export const LetterModal: React.FC<LetterModalProps> = ({
               {/* Action Links */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                 <a
-                  href="mailto:shivkumar6990655@gmail.com"
+                  href="https://mail.google.com/mail/?view=cm&fs=1&to=shivkumar6990655@gmail.com"
+                  onClick={openShivGmail}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Open in Gmail (Web on PC / App on Phone)"
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -1218,7 +1348,53 @@ export const LetterModal: React.FC<LetterModalProps> = ({
                     cursor: 'pointer',
                   }}
                 >
-                  <Mail size={16} /> Compose Email Now →
+                  <Mail size={16} /> Email Shiv →
+                </a>
+                <a
+                  href="https://x.com/nightcore_077"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="X (formerly Twitter) @nightcore_077"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '10px 16px',
+                    backgroundColor: '#ffffff',
+                    border: '2px solid #1e252b',
+                    borderRadius: '10px',
+                    boxShadow: '2px 2px 0px #1e252b',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    color: '#1e252b',
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <XIcon size={15} /> X (@nightcore_077) ↗
+                </a>
+                <a
+                  href="https://www.instagram.com/nightcore_077/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Instagram @nightcore_077"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '10px 16px',
+                    backgroundColor: '#ffffff',
+                    border: '2px solid #1e252b',
+                    borderRadius: '10px',
+                    boxShadow: '2px 2px 0px #1e252b',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    color: '#1e252b',
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Instagram size={16} color="#e1306c" /> Instagram ↗
                 </a>
                 <a
                   href="https://github.com/shivkumar077"
@@ -1390,7 +1566,16 @@ export const LetterModal: React.FC<LetterModalProps> = ({
                       Shiv Kumar
                     </h1>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', fontSize: '12.5px', color: '#55636d', fontWeight: 600 }}>
-                      <span>✉ shivkumar6990655@gmail.com</span>
+                      <a
+                        href="https://mail.google.com/mail/?view=cm&fs=1&to=shivkumar6990655@gmail.com"
+                        onClick={openShivGmail}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Open in Gmail (Web on PC / App on Phone)"
+                        style={{ color: '#1e252b', textDecoration: 'none', fontWeight: 700 }}
+                      >
+                        ✉ shivkumar6990655@gmail.com
+                      </a>
                       <span>📞 +91-7481865054</span>
                       <span>📍 Kolkata, India</span>
                       <a href="https://github.com/shivkumar077" target="_blank" rel="noopener noreferrer" style={{ color: '#1e252b', fontWeight: 700 }}>
@@ -1398,6 +1583,12 @@ export const LetterModal: React.FC<LetterModalProps> = ({
                       </a>
                       <a href="https://www.linkedin.com/in/shiv-kumar-399a32231/" target="_blank" rel="noopener noreferrer" style={{ color: '#1e252b', fontWeight: 700 }}>
                         LinkedIn ↗
+                      </a>
+                      <a href="https://x.com/nightcore_077" target="_blank" rel="noopener noreferrer" style={{ color: '#1e252b', fontWeight: 700 }}>
+                        X ↗
+                      </a>
+                      <a href="https://www.instagram.com/nightcore_077/" target="_blank" rel="noopener noreferrer" style={{ color: '#1e252b', fontWeight: 700 }}>
+                        Instagram ↗
                       </a>
                     </div>
                   </div>

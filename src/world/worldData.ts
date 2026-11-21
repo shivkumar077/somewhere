@@ -244,7 +244,7 @@ export const CANONICAL_WORLD: WorldDefinition = {
       category: 'civic',
       destinationRole: 'contact',
       assetKey: 'mesh-post-office',
-      description: 'Get in touch with Shiv Kumar: Email, GitHub, LinkedIn, and Résumé download.',
+      description: 'Get in touch with Shiv Kumar: Email, GitHub, LinkedIn, X, Instagram, and Résumé download.',
       coordinates: { lat: 14, lon: -14, altitude: 0.03, flatX: -10, flatZ: 8 },
       rotationY: 60,
       scale: 1.04,
@@ -260,7 +260,7 @@ export const CANONICAL_WORLD: WorldDefinition = {
         residentOrPurpose: 'Postmistress Clara & Postal Network',
         milestoneIntroduced: 3,
         interactionTargetId: 'contact',
-        amenities: ['Direct Mail Dispatch', 'GitHub Portal', 'LinkedIn Connection Board', 'Résumé Postbox'],
+        amenities: ['Direct Mail Dispatch', 'GitHub Portal', 'LinkedIn Connection Board', 'X & Instagram Feeds', 'Résumé Postbox'],
         tags: ['Primary Destination', 'Contact', 'Core'],
       },
       rendering: {

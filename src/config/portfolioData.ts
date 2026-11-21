@@ -29,6 +29,8 @@ export interface PortfolioData {
     email: string;
     github: string;
     linkedin: string;
+    x?: string;
+    instagram?: string;
   };
   about: {
     heading: string;
@@ -60,6 +62,8 @@ export interface PortfolioData {
     email: string;
     github: string;
     linkedin: string;
+    x?: string;
+    instagram?: string;
     note: string;
   };
 }
@@ -71,7 +75,9 @@ export const PORTFOLIO_DATA: PortfolioData = {
     location: 'Kolkata, India',
     email: 'shivkumar6990655@gmail.com',
     github: 'https://github.com/shivkumar077',
-    linkedin: 'https://linkedin.com/in/shivkumar077',
+    linkedin: 'https://www.linkedin.com/in/shiv-kumar-399a32231/',
+    x: 'https://x.com/nightcore_077',
+    instagram: 'https://www.instagram.com/nightcore_077/',
   },
 
   about: {
@@ -245,7 +251,9 @@ export const PORTFOLIO_DATA: PortfolioData = {
   contact: {
     email: 'shivkumar6990655@gmail.com',
     github: 'https://github.com/shivkumar077',
-    linkedin: 'https://linkedin.com/in/shivkumar077',
+    linkedin: 'https://www.linkedin.com/in/shiv-kumar-399a32231/',
+    x: 'https://x.com/nightcore_077',
+    instagram: 'https://www.instagram.com/nightcore_077/',
     note: 'Feel free to reach out for collaborations, engineering discussions, or to say hello!',
   },
 };
